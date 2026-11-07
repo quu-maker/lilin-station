@@ -38,6 +38,12 @@
 #chooser .dialog p{margin:0;font-size:16.5px;line-height:1.65}
 #chooser .wander{position:relative;z-index:2;margin-top:13px;background:none;border:none;color:#d7dee9;
   font-size:13.5px;text-decoration:underline;cursor:pointer;text-shadow:0 1px 6px #000}
+#room3d{position:absolute;inset:0;z-index:0}
+#room3d canvas{display:block}
+#chooser.has-3d .room-bg,#chooser.has-3d .shade,#chooser.has-3d .mote,#chooser.has-3d #stageChoice{display:none}
+#tip{position:fixed;z-index:60;pointer-events:none;background:rgba(9,13,20,.85);color:#fff;
+  border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:4px 12px;font-size:13.5px;
+  opacity:0;transition:opacity .15s}
 </style>
 </head>
 <body>
@@ -98,7 +104,10 @@
   音声：COEIROINK:リリンちゃん／CV:リリンちゃん@COEIROINK（https://coeiroink.com/character/audio-character/lilin-h）<br>
   キャラクターは AI で生成した画像です。
 </footer>
+<div id="tip"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="assets/character.js"></script>
+<script src="assets/room3d.js"></script>
 <script>
 const LINES = {
   morning: ["おはようございます！ 今日もいい一日にしましょう。", "おはようございます。朝の建築ラジオ、もうすぐ始まりますよ。"],
