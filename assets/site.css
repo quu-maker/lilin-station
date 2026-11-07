@@ -10,9 +10,14 @@ header.top h1{margin:0;font-size:30px;letter-spacing:.04em}
 header.top p{margin:6px 0 0;color:var(--muted);font-size:14px}
 .wrap{max-width:860px;margin:0 auto;padding:14px 16px 40px}
 .stagebox{position:relative;max-width:520px;margin:14px auto 0}
-.lilin-stage{position:relative;width:100%;aspect-ratio:896/768;border-radius:16px;overflow:hidden;
-  animation:sway 5s ease-in-out infinite}
-@keyframes sway{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.lilin-stage{position:relative;width:100%;aspect-ratio:896/768;border-radius:16px;overflow:hidden}
+.lilin-body{position:absolute;inset:0;animation:lilin-life 8s ease-in-out infinite;will-change:transform}
+@keyframes lilin-life{0%,100%{transform:translateY(0) rotate(0deg) scale(1)}
+  25%{transform:translateY(-3px) rotate(.35deg) scale(1.005)}
+  50%{transform:translateY(-5px) rotate(0deg) scale(1.008)}
+  75%{transform:translateY(-3px) rotate(-.35deg) scale(1.005)}}
+.lilin-stage.hop{animation:hop .45s ease-out}
+@keyframes hop{0%{transform:translateY(0)}30%{transform:translateY(-10px)}60%{transform:translateY(0)}80%{transform:translateY(-3px)}}
 .lilin-base{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .lilin-part{position:absolute;height:auto;transition:opacity .05s}
 .bubble{position:relative;max-width:520px;margin:14px auto 0;background:#1d2233;border:1px solid var(--line);

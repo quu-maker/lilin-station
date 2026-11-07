@@ -6,8 +6,40 @@
 <title>リリン・ステーション</title>
 <meta name="description" content="リリンちゃんが案内する、Lqkoa のためのステーション。建築ラジオ、語学の学習室、作品室の3つの部屋があります。">
 <link rel="stylesheet" href="assets/site.css">
+<style>
+#chooser{position:fixed;inset:0;z-index:50;background:var(--ink);overflow:auto;
+  display:flex;flex-direction:column;align-items:center;padding:26px 16px 34px}
+#chooser.hide{display:none}
+#chooser .stagebox{width:min(300px,72vw);margin-top:6px}
+#chooser .bubble{max-width:420px;width:100%}
+#chooser .choices{display:flex;flex-direction:column;gap:12px;width:min(420px,100%);margin-top:20px}
+#chooser .choice{display:flex;align-items:center;gap:14px;text-decoration:none;text-align:left;
+  background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;
+  transition:transform .15s,border-color .15s}
+#chooser .choice:hover{transform:translateY(-2px);border-color:var(--teal)}
+#chooser .choice .icon{font-size:34px}
+#chooser .choice h2{margin:0;font-size:21px}
+#chooser .choice p{margin:3px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
+#chooser .wander{margin-top:18px;background:none;border:none;color:var(--muted);
+  font-size:14px;text-decoration:underline;cursor:pointer}
+</style>
 </head>
 <body>
+<div id="chooser">
+  <div class="stagebox" id="stageChoice"></div>
+  <div class="bubble" id="bubbleChoice">おかえりなさい！ 今日はどっちにしますか？</div>
+  <div class="choices">
+    <a class="choice" href="radio/">
+      <span class="icon">📻</span>
+      <span><h2>ラジオを聴く</h2><p>建築ラジオ室へ。毎朝 6:20 の建築ニュース。</p></span>
+    </a>
+    <a class="choice" href="study/">
+      <span class="icon">🇩🇪</span>
+      <span><h2>ドイツ語を練習する</h2><p>学習室へ。フレーズとクイズ、1日10分。</p></span>
+    </a>
+  </div>
+  <button class="wander" id="wanderBtn" type="button">ステーションをぶらぶらする（作品室など）</button>
+</div>
 <header class="top">
   <h1>リリン・ステーション</h1>
   <p>リリンちゃんが住んでいる、Lqkoa のための小さなステーション</p>
@@ -64,6 +96,21 @@ function slot() {
     const pool = LINES[slot()];
     say(pool[Math.floor(Math.random() * pool.length)]);
     stage.smile(1200);
+    stage.bounce();
+  });
+  // 入口の選択画面（ドイツ語かラジオか）
+  const chooser = document.getElementById("chooser");
+  const choiceStage = await createLilinStage(document.getElementById("stageChoice"), "character/");
+  const bubbleChoice = document.getElementById("bubbleChoice");
+  const greet = "おかえりなさい！ 今日はどっちにしますか？";
+  bubbleChoice.textContent = greet;
+  choiceStage.talk(Math.min(3600, 700 + greet.length * 90));
+  document.getElementById("stageChoice").addEventListener("click", () => {
+    choiceStage.smile(1200);
+    choiceStage.bounce();
+  });
+  document.getElementById("wanderBtn").addEventListener("click", () => {
+    chooser.classList.add("hide");
   });
 })();
 </script>

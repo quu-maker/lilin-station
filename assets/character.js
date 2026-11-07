@@ -6,6 +6,9 @@ async function createLilinStage(mount, packDir) {
   const stage = document.createElement("div");
   stage.className = "lilin-stage";
   stage.style.background = pack.background || "#161a26";
+  const bodyEl = document.createElement("div");
+  bodyEl.className = "lilin-body";
+  stage.appendChild(bodyEl);
   const layer = (src, x, y) => {
     const img = document.createElement("img");
     img.src = packDir + src;
@@ -21,7 +24,7 @@ async function createLilinStage(mount, packDir) {
     } else {
       img.className = "lilin-base";
     }
-    stage.appendChild(img);
+    bodyEl.appendChild(img);
     return img;
   };
   layer(pack.base);
@@ -76,5 +79,11 @@ async function createLilinStage(mount, packDir) {
     show(key, true);
     setTimeout(() => show(key, false), ms);
   }
-  return { talk, smile, el: stage };
+  function bounce() {
+    stage.classList.remove("hop");
+    void stage.offsetWidth;
+    stage.classList.add("hop");
+    setTimeout(() => stage.classList.remove("hop"), 500);
+  }
+  return { talk, smile, bounce, el: stage };
 }
