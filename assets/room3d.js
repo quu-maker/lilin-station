@@ -351,7 +351,8 @@
   hazardFloor.rotation.x = -Math.PI / 2; hazardFloor.position.set(4.35, 0.02, -1.5);
   scene.add(hazardFloor);
   // 制御盤（ランプが点滅する）
-  box(1.5, 1.0, 0.14, 0x1b1b1f, -3.1, 2.6, -4.32);
+  const panelBox = box(1.5, 1.0, 0.14, 0x1b1b1f, -3.1, 2.6, -4.32);
+  panelBox.userData.hotspot = "panel";
   const lampCols = [0x3fe08a, 0xffd23d, 0x3fe08a, 0x8a8a8a, 0xffd23d, 0x3fe08a];
   lampCols.forEach((c, i) => {
     const dot = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.1),
@@ -362,7 +363,9 @@
   const panelLight = new THREE.Mesh(new THREE.PlaneGeometry(0.13, 0.13),
     new THREE.MeshBasicMaterial({ color: 0xff3333 }));
   panelLight.position.set(-2.32, 2.28, -4.24);
+  panelLight.userData.hotspot = "panel";
   scene.add(panelLight);
+  boiler.traverse(o => { o.userData.hotspot = "boiler"; });
   // ドラム缶とクレート
   const barrel1 = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.85, 18), metal(0xd8a800));
   barrel1.position.set(-5.35, 0.43, 0.75); scene.add(barrel1);
@@ -438,9 +441,9 @@
   stoolSeat.position.set(-0.15, 0.56, -3.25); scene.add(stoolSeat);
   const stoolLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.53, 10), mat(0x2a2a2e));
   stoolLeg.position.set(-0.15, 0.27, -3.25); scene.add(stoolLeg);
-  const toolbox = box(0.55, 0.28, 0.3, 0xc23b2e, 1.15, 0.14, -3.35);
+  const toolbox = box(0.55, 0.28, 0.3, 0xc23b2e, 0.15, 1.14, -4.0);
   const tbHandle = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.02, 8, 16, Math.PI), mat(0x1c1c1f));
-  tbHandle.position.set(1.15, 0.29, -3.35); scene.add(tbHandle);
+  tbHandle.position.set(0.15, 1.29, -4.0); scene.add(tbHandle);
   // 壁のファン（回る）
   const fanGroup = new THREE.Group(); fanGroup.position.set(0.55, 4.65, -4.3); scene.add(fanGroup);
   const fanRing = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.045, 10, 28), metal(0x2c2c30));
@@ -456,6 +459,7 @@
   }
   const fanHub = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.08, 14), metal(0x2c2c30));
   fanHub.rotation.x = Math.PI / 2; fanGroup.add(fanHub);
+  fanGroup.traverse(o => { o.userData.hotspot = "fan"; });
   // 追加の計器
   for (const [gx, gy, gr] of [[-2.2, 3.45, 0.13], [-1.82, 3.36, 0.1]]) {
     const gg = new THREE.Mesh(new THREE.CylinderGeometry(gr, gr, 0.04, 18), mat(0xf3ead8));
@@ -472,9 +476,9 @@
   }
   // 消火器
   const extBody = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.42, 14), mat(0xc23b2e));
-  extBody.position.set(2.55, 0.21, -2.35); scene.add(extBody);
+  extBody.position.set(3.05, 0.21, 1.0); scene.add(extBody);
   const extTop = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.12, 8), mat(0x1c1c1f));
-  extTop.position.set(2.55, 0.48, -2.35); scene.add(extTop);
+  extTop.position.set(3.05, 0.48, 1.0); scene.add(extTop);
   // 追加配管とホースのコイル
   pipe(0.05, 3.2, 5.56, 1.6, -3.0, "y");
   const hose = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.06, 10, 26), mat(0x1c1c1f));
@@ -618,7 +622,42 @@
   const tip = document.getElementById("tip");
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
-  const HOTSPOT_LABELS = { radio: "📻 ラジオ室へ", study: "🇩🇪 学習室へ", lilin: "リリンちゃん" };
+  const HOTSPOT_LABELS = {
+    radio: "📻 ラジオ室へ", study: "🇩🇪 学習室へ", lilin: "リリンちゃん",
+    boiler: "ボイラー", fan: "ファン", panel: "制御盤",
+  };
+  const REACTIONS = {
+    boiler: ["このボイラーがステーションの心臓部です。", "圧力は安定してます。今日も絶好調！", "Dampf（蒸気）でみんなを温めてます。"],
+    fan: ["くるくる回るファン、涼しい風をお届け中です。", "暑い日はこれが頼りなんです。"],
+    panel: ["ランプの点滅は異常じゃなくて通常運転です。", "計器は全部正常です！"],
+  };
+  let lastInteract = Date.now();
+  chooser.addEventListener("pointerdown", () => { lastInteract = Date.now(); });
+  function react(spot) {
+    const lines = REACTIONS[spot];
+    if (!lines) return;
+    lastInteract = Date.now();
+    const bubble = document.getElementById("bubbleText");
+    if (bubble) bubble.textContent = lines[Math.floor(Math.random() * lines.length)];
+    talk(1900); smile(1100);
+  }
+  // 放置してるとたまにひとこと（ドイツ語まじり）
+  const CHATTER = [
+    "暇なときはドイツ語の復習がおすすめです。",
+    "「Guten Morgen」は、おはようって意味ですよ。",
+    "今日の放送、もう聴きました？",
+    "Ich lerne auch jeden Tag. 私も毎日勉強中です。",
+    "なんだかお腹がすきました…。",
+    "ボイラーの調子、いい感じです。",
+  ];
+  setInterval(() => {
+    if (chooser.classList.contains("hide") || !chooser.classList.contains("has-3d")) return;
+    if (Date.now() - lastInteract < 45000) return;
+    lastInteract = Date.now();
+    const bubble = document.getElementById("bubbleText");
+    if (bubble) bubble.textContent = CHATTER[Math.floor(Math.random() * CHATTER.length)];
+    talk(2000);
+  }, 20000);
   function pick(ev) {
     const rect = renderer.domElement.getBoundingClientRect();
     pointer.x = ((ev.clientX - rect.left) / rect.width) * 2 - 1;
@@ -647,7 +686,8 @@
     const spot = pick(ev);
     if (spot === "radio") location.href = "radio/";
     else if (spot === "study") location.href = "study/";
-    else if (spot === "lilin") { smile(1300); bounce(); talk(1800); }
+    else if (spot === "lilin") { smile(1300); bounce(); talk(1800); lastInteract = Date.now(); }
+    else if (spot) react(spot);
   });
 
   // ---------- カメラの揺れとマウスパララックス ----------

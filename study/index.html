@@ -31,7 +31,17 @@
   </section>
 
   <section class="card">
+    <h2>ランダムクイズ（全フレーズから5問）</h2>
+    <p class="big-de" id="rq-de">「スタート」で始まります</p>
+    <p class="reading" id="rq-reading"></p>
+    <div class="choices" id="rq-choices"></div>
+    <p id="rq-result" style="min-height:1.6em"></p>
+    <div class="choices"><button id="rq-start">スタート</button></div>
+  </section>
+
+  <section class="card">
     <h2>フレーズ一覧</h2>
+    <p id="learned-count" style="color:var(--muted)"></p>
     <div id="list"></div>
   </section>
 </div>
@@ -113,6 +123,78 @@ function ordinal() { const d = new Date(); return Math.floor((d - new Date(d.get
     choicesEl.appendChild(btn);
   }
 
+  // ---- ランダムクイズ（5問） ----
+  const rqDe = document.getElementById("rq-de");
+  const rqReading = document.getElementById("rq-reading");
+  const rqChoices = document.getElementById("rq-choices");
+  const rqResult = document.getElementById("rq-result");
+  const rqStart = document.getElementById("rq-start");
+  let rq = null;
+  function rqAsk() {
+    const p = phrases[rq.order[rq.pos]];
+    rqDe.textContent = p.de;
+    rqReading.textContent = p.reading;
+    rqResult.textContent = "第" + (rq.pos + 1) + "問 ／ 5問中 " + rq.score + " 問正解";
+    rqChoices.innerHTML = "";
+    const opts = [rq.order[rq.pos]];
+    while (opts.length < 4) {
+      const r = Math.floor(Math.random() * phrases.length);
+      if (!opts.includes(r)) opts.push(r);
+    }
+    opts.sort(() => Math.random() - 0.5);
+    let locked = false;
+    for (const oi of opts) {
+      const btn = document.createElement("button");
+      btn.textContent = phrases[oi].ja;
+      btn.addEventListener("click", () => {
+        if (locked) return;
+        locked = true;
+        const s = loadStats();
+        s.attempts = (s.attempts || 0) + 1;
+        if (oi === rq.order[rq.pos]) {
+          btn.classList.add("right");
+          rq.score++;
+          s.correct = (s.correct || 0) + 1;
+          rqResult.textContent = "正解！";
+        } else {
+          btn.classList.add("wrong");
+          rqResult.textContent = "正解は「" + p.ja + "」でした。";
+        }
+        saveStats(s);
+        renderStats();
+        rq.pos++;
+        setTimeout(() => {
+          if (rq.pos < rq.order.length) rqAsk();
+          else {
+            rqDe.textContent = "おつかれさまでした";
+            rqReading.textContent = "";
+            rqChoices.innerHTML = "";
+            rqResult.textContent = "結果：5問中 " + rq.score + " 問正解！";
+            say(rq.score >= 4 ? "すごいです！ ほぼ完璧ですね。" : "おつかれさまです。復習してもう一度どうぞ。");
+            if (rq.score >= 4) stage.smile(2000);
+            rqStart.textContent = "もう一度";
+            rq = null;
+          }
+        }, 1100);
+      });
+      rqChoices.appendChild(btn);
+    }
+  }
+  rqStart.addEventListener("click", () => {
+    const order = phrases.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, 5);
+    rq = { order, pos: 0, score: 0 };
+    rqStart.textContent = "挑戦中…";
+    say("ランダムクイズです。全フレーズから5問出しますね。");
+    rqAsk();
+  });
+
+  // ---- フレーズ一覧＋「覚えた」チェック ----
+  const learnedCount = document.getElementById("learned-count");
+  const learned = new Set(loadStats().learned || []);
+  function renderLearned() {
+    learnedCount.textContent = "覚えた: " + learned.size + " / " + phrases.length;
+  }
+  renderLearned();
   const list = document.getElementById("list");
   for (const p of phrases) {
     const row = document.createElement("p");
@@ -120,7 +202,19 @@ function ordinal() { const d = new Date(); return Math.floor((d - new Date(d.get
     const b = document.createElement("strong"); b.textContent = p.de;
     const span = document.createElement("span"); span.style.color = "var(--muted)";
     span.textContent = "　" + p.reading + "　―　" + p.ja;
-    row.append(b, span);
+    const btn = document.createElement("button");
+    btn.style.cssText = "margin-left:10px;font-size:12.5px;padding:2px 10px;border-radius:999px;cursor:pointer";
+    const paint = () => { btn.textContent = learned.has(p.de) ? "✓ 覚えた" : "覚えた"; };
+    paint();
+    btn.addEventListener("click", () => {
+      if (learned.has(p.de)) learned.delete(p.de); else learned.add(p.de);
+      const s = loadStats();
+      s.learned = [...learned];
+      saveStats(s);
+      paint();
+      renderLearned();
+    });
+    row.append(b, span, btn);
     list.appendChild(row);
   }
 })();

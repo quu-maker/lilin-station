@@ -38,6 +38,7 @@
 #chooser .dialog p{margin:0;font-size:16.5px;line-height:1.65}
 #chooser .wander{position:relative;z-index:2;margin-top:13px;background:none;border:none;color:#d7dee9;
   font-size:13.5px;text-decoration:underline;cursor:pointer;text-shadow:0 1px 6px #000}
+#menuWord{position:relative;z-index:2;margin-top:11px;color:#ffd76a;font-size:13.5px;text-shadow:0 1px 6px #000}
 #room3d{position:absolute;inset:0;z-index:0}
 #room3d canvas{display:block}
 #chooser.has-3d .room-bg,#chooser.has-3d .shade,#chooser.has-3d .mote,#chooser.has-3d #stageChoice{display:none}
@@ -67,6 +68,7 @@
     </a>
   </div>
   <div class="dialog" id="bubbleChoice"><span class="name">リリン</span><p id="bubbleText">おかえりなさい！ 今日はどっちにしますか？</p></div>
+  <p id="menuWord"></p>
   <button class="wander" id="wanderBtn" type="button">ステーションをぶらぶらする（作品室など）</button>
 </div>
 <header class="top">
@@ -107,7 +109,15 @@
 <div id="tip"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="assets/character.js"></script>
-<script src="assets/room3d.js?v=5"></script>
+<script src="assets/room3d.js?v=6"></script>
+<script>
+fetch("study/phrases.json").then(r => r.json()).then(ps => {
+  const d = new Date();
+  const ord = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 86400000);
+  const p = ps[ord % ps.length];
+  document.getElementById("menuWord").textContent = "今日のドイツ語：" + p.de + "（" + p.ja + "）";
+}).catch(() => {});
+</script>
 <script>
 const LINES = {
   morning: ["おはようございます！ 今日もいい一日にしましょう。", "おはようございます。朝の建築ラジオ、もうすぐ始まりますよ。"],
