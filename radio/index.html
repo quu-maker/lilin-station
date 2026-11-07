@@ -14,6 +14,8 @@
 html{-webkit-tap-highlight-color:transparent}
 body{margin:0;background:#07080c;color:var(--text);font-family:var(--jp)}
 main{max-width:1280px;margin:0 auto;padding:16px}
+.backlink{display:inline-block;margin:0 0 12px;color:var(--muted);text-decoration:none;font-size:14.5px}
+.backlink:hover{color:var(--yellow)}
 /* the 1920x1080 stage, scaled to the page width (1080x1920 on a phone held upright: see the end) */
 #frame{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:12px;background:var(--ink)}
 #stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;
@@ -445,6 +447,7 @@ html.phone #share span{display:none}
 </head>
 <body>
 <main>
+  <a class="backlink" href="../">← ステーションに戻る</a>
   <div id="frame">
     <div id="stage">
       <div class="brand"><i class="logo" id="slogo" hidden></i><b id="sname">ものラジオ</b><div class="epsel" id="epsel"><button class="epnav" id="epPrev" aria-label="前の回" title="前の回" hidden></button><button id="sdate" aria-haspopup="listbox" aria-expanded="false" aria-controls="eplist"><span></span><i></i></button><button class="epnav" id="epNext" aria-label="次の回" title="次の回" hidden></button><div id="eplist" role="listbox" aria-label="放送日"></div></div><div class="langsw" id="langsw" hidden></div></div>

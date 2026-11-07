@@ -17,7 +17,7 @@
   mount.appendChild(renderer.domElement);
 
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0d2b23);
+  scene.background = new THREE.Color(0x0e0e10);
   const camera = new THREE.PerspectiveCamera(46, W() / H(), 0.1, 100);
   camera.position.set(0, 2.7, 8.6);
 
@@ -26,13 +26,13 @@
   const slot = hour >= 5 && hour < 11 ? "morning" : hour < 17 ? "day" : hour < 23 ? "evening" : "night";
   const SKY = {
     morning: ["#8fb8e8", "#ffe3b0"], day: ["#6fa8e0", "#d6ecff"],
-    evening: ["#2b4a7a", "#e8906a"], night: ["#081a33", "#1d3355"],
+    evening: ["#3a3f4a", "#c77b4a"], night: ["#0a0d14", "#232a38"],
   }[slot];
   const dayLight = { morning: 0.55, day: 0.75, evening: 0.35, night: 0.12 }[slot];
   const lampLevel = { morning: 0.7, day: 0.45, evening: 1.25, night: 1.5 }[slot];
 
   // ---------- ライティング ----------
-  scene.add(new THREE.AmbientLight(0x8fa3c7, 0.38));
+  scene.add(new THREE.AmbientLight(0xa39a8c, 0.34));
   const sun = new THREE.DirectionalLight(0xbfd4ff, dayLight);
   sun.position.set(-7, 4.5, 2.5);
   scene.add(sun);
@@ -51,16 +51,16 @@
     return m;
   };
 
-  // ---------- 部屋の箱 ----------
-  box(12, 0.3, 9, 0x6b4a2f, 0, -0.15, 0);                    // 床
-  box(12, 6.5, 0.3, 0x14453a, 0, 3.25, -4.5);                 // 奥の壁
-  box(0.3, 6.5, 9, 0x113a30, 6, 3.25, 0);                     // 右の壁
-  box(12, 0.3, 9, 0x0e2f27, 0, 6.6, 0);                       // 天井
+  // ---------- 部屋の箱（黒×黄色のボイラー室仕様） ----------
+  box(12, 0.3, 9, 0x232327, 0, -0.15, 0);                    // 床（鉄板色）
+  box(12, 6.5, 0.3, 0x1b1b1e, 0, 3.25, -4.5);                 // 奥の壁
+  box(0.3, 6.5, 9, 0x17171a, 6, 3.25, 0);                     // 右の壁
+  box(12, 0.3, 9, 0x121214, 0, 6.6, 0);                       // 天井
   // 左の壁（窓の開口を残して4分割）
-  box(0.3, 6.5, 2.6, 0x113a30, -6, 3.25, -3.2);
-  box(0.3, 6.5, 2.2, 0x113a30, -6, 3.25, 3.4);
-  box(0.3, 1.6, 4.2, 0x113a30, -6, 5.7, -0.1);
-  box(0.3, 1.5, 4.2, 0x113a30, -6, 0.75, -0.1);
+  box(0.3, 6.5, 2.6, 0x17171a, -6, 3.25, -3.2);
+  box(0.3, 6.5, 2.2, 0x17171a, -6, 3.25, 3.4);
+  box(0.3, 1.6, 4.2, 0x17171a, -6, 5.7, -0.1);
+  box(0.3, 1.5, 4.2, 0x17171a, -6, 0.75, -0.1);
 
   // 窓の外の空
   const skyCanvas = document.createElement("canvas");
@@ -76,13 +76,15 @@
   sky.position.set(-7.4, 3.4, -0.1);
   sky.rotation.y = Math.PI / 2;
   scene.add(sky);
-  // 窓枠とカーテン
-  box(0.14, 3.6, 0.14, 0x8a6844, -5.85, 3.35, -2.15);
-  box(0.14, 3.6, 0.14, 0x8a6844, -5.85, 3.35, 1.95);
-  box(0.14, 0.14, 4.24, 0x8a6844, -5.85, 5.1, -0.1);
-  box(0.14, 0.14, 4.24, 0x8a6844, -5.85, 1.6, -0.1);
+  // 窓枠と格子とブラインド
+  box(0.14, 3.6, 0.14, 0x3a3a3e, -5.85, 3.35, -2.15);
+  box(0.14, 3.6, 0.14, 0x3a3a3e, -5.85, 3.35, 1.95);
+  box(0.14, 0.14, 4.24, 0x3a3a3e, -5.85, 5.1, -0.1);
+  box(0.14, 0.14, 4.24, 0x3a3a3e, -5.85, 1.6, -0.1);
+  box(0.08, 3.5, 0.08, 0x2c2c30, -5.85, 3.35, -0.8);
+  box(0.08, 3.5, 0.08, 0x2c2c30, -5.85, 3.35, 0.6);
   const curtainMat = new THREE.MeshStandardMaterial({
-    color: 0xf3ead8, transparent: true, opacity: 0.75, roughness: 1, side: THREE.DoubleSide,
+    color: 0x2e2e33, transparent: true, opacity: 0.88, roughness: 1, side: THREE.DoubleSide,
   });
   for (const z of [-1.85, 1.65]) {
     const c = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 3.5), curtainMat);
@@ -96,12 +98,12 @@
   const rugCanvas = document.createElement("canvas");
   rugCanvas.width = rugCanvas.height = 256;
   const rctx = rugCanvas.getContext("2d");
-  rctx.fillStyle = "#1d4a44"; rctx.fillRect(0, 0, 256, 256);
-  rctx.strokeStyle = "#c96f2e"; rctx.lineWidth = 7;
+  rctx.fillStyle = "#222226"; rctx.fillRect(0, 0, 256, 256);
+  rctx.strokeStyle = "#e8b400"; rctx.lineWidth = 7;
   rctx.strokeRect(14, 14, 228, 228);
   rctx.save(); rctx.translate(128, 128); rctx.rotate(Math.PI / 4);
   rctx.strokeRect(-52, -52, 104, 104);
-  rctx.strokeStyle = "#e8a34c"; rctx.strokeRect(-30, -30, 60, 60);
+  rctx.strokeStyle = "#8a7200"; rctx.strokeRect(-30, -30, 60, 60);
   rctx.restore();
   const rugTex = new THREE.CanvasTexture(rugCanvas);
   rugTex.encoding = THREE.sRGBEncoding;
@@ -112,25 +114,25 @@
 
   // ---------- 机とラジオ（学習室／ラジオ室のホットスポット） ----------
   const deskGroup = new THREE.Group(); scene.add(deskGroup);
-  box(2.6, 0.12, 1.2, 0x8a6844, -4.2, 1.5, -2.2, deskGroup);
+  box(2.6, 0.12, 1.2, 0x333338, -4.2, 1.5, -2.2, deskGroup);
   for (const [x, z] of [[-5.35, -2.7], [-3.05, -2.7], [-5.35, -1.7], [-3.05, -1.7]])
-    box(0.1, 1.5, 0.1, 0x77572f, x, 0.75, z, deskGroup);
-  // ラジオ
+    box(0.1, 1.5, 0.1, 0x2a2a2e, x, 0.75, z, deskGroup);
+  // ラジオ（黄色ボディ）
   const radioGroup = new THREE.Group(); radioGroup.position.set(-4.75, 1.56, -2.35); scene.add(radioGroup);
-  box(0.78, 0.52, 0.3, 0x9c5a30, 0, 0.26, 0, radioGroup);
-  box(0.66, 0.4, 0.03, 0xe8d9b0, 0, 0.26, 0.16, radioGroup);
+  box(0.78, 0.52, 0.3, 0xe8b400, 0, 0.26, 0, radioGroup);
+  box(0.66, 0.4, 0.03, 0x1c1c1f, 0, 0.26, 0.16, radioGroup);
   const dialGeo = new THREE.CylinderGeometry(0.055, 0.055, 0.05, 20);
   for (const dx of [-0.18, 0.18]) {
-    const d = new THREE.Mesh(dialGeo, mat(0x5a3a20));
+    const d = new THREE.Mesh(dialGeo, mat(0x111111));
     d.rotation.x = Math.PI / 2; d.position.set(dx, 0.14, 0.18); radioGroup.add(d);
   }
   const antenna = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.85, 6), mat(0xcccccc, 0.4));
   antenna.position.set(0.3, 0.85, -0.05); antenna.rotation.z = -0.5; radioGroup.add(antenna);
   // ランプ
-  const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.17, 0.1, 20), mat(0x77572f));
+  const lampBase = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.17, 0.1, 20), mat(0x222226));
   lampBase.position.set(-3.55, 1.61, -2.45); scene.add(lampBase);
   const lampShade = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.36, 24, 1, true),
-    new THREE.MeshStandardMaterial({ color: 0xffd9a0, emissive: 0xffb45c, emissiveIntensity: 0.85, side: THREE.DoubleSide }));
+    new THREE.MeshStandardMaterial({ color: 0xe8b400, emissive: 0xffb45c, emissiveIntensity: 0.85, side: THREE.DoubleSide }));
   lampShade.position.set(-3.55, 2.05, -2.45); scene.add(lampShade);
   // 本とマグカップ
   box(0.55, 0.06, 0.4, 0xd8d2c2, -4.05, 1.6, -1.95).rotation.y = 0.25;
@@ -139,11 +141,11 @@
 
   // 本棚
   const shelfGroup = new THREE.Group(); shelfGroup.position.set(-5.55, 0, -3.9); scene.add(shelfGroup);
-  box(0.9, 3.4, 0.12, 0x77572f, 0, 1.7, -0.45, shelfGroup);
-  box(0.9, 3.4, 0.12, 0x77572f, 0, 1.7, 0.45, shelfGroup);
-  const bookColors = [0xb8563e, 0x3e6fb8, 0x58a06a, 0xd8b34c, 0x8a6fb8, 0xd8d2c2, 0x4ca8a0];
+  box(0.9, 3.4, 0.12, 0x2c2c30, 0, 1.7, -0.45, shelfGroup);
+  box(0.9, 3.4, 0.12, 0x2c2c30, 0, 1.7, 0.45, shelfGroup);
+  const bookColors = [0x8a4a3a, 0x3a5a8a, 0x4a7a58, 0xe8b400, 0x6a5a8a, 0xd8d2c2, 0x3a7a76];
   for (let s = 0; s < 3; s++) {
-    box(0.95, 0.09, 1.0, 0x8a6844, 0, 0.55 + s * 1.05, 0, shelfGroup);
+    box(0.95, 0.09, 1.0, 0x35353a, 0, 0.55 + s * 1.05, 0, shelfGroup);
     let bx = -0.36;
     while (bx < 0.3) {
       const bw = 0.07 + Math.random() * 0.06, bh = 0.55 + Math.random() * 0.25;
@@ -156,12 +158,14 @@
   deskGroup.traverse(o => { o.userData.hotspot = "study"; });
   radioGroup.traverse(o => { o.userData.hotspot = "radio"; });
 
-  // ベッド
-  const bedGroup = new THREE.Group(); bedGroup.position.set(3.9, 0, -2.6); scene.add(bedGroup);
-  box(3.4, 0.35, 2.0, 0x77572f, 0, 0.35, 0, bedGroup);
-  box(3.3, 0.3, 1.9, 0x2c5a54, 0, 0.68, 0, bedGroup);
+  // ベッド（ボイラーに場所を譲って右の壁沿いへ）
+  const bedGroup = new THREE.Group();
+  bedGroup.position.set(4.85, 0, 0.9); bedGroup.rotation.y = Math.PI / 2;
+  scene.add(bedGroup);
+  box(3.4, 0.35, 2.0, 0x2a2a2e, 0, 0.35, 0, bedGroup);
+  box(3.3, 0.3, 1.9, 0x2e2e33, 0, 0.68, 0, bedGroup);
   box(0.85, 0.18, 1.1, 0xe8e2d2, -1.05, 0.9, 0, bedGroup);
-  box(0.8, 0.16, 1.0, 0xe8a34c, -0.95, 0.88, 0.25, bedGroup).rotation.z = 0.08;
+  box(0.8, 0.16, 1.0, 0xe8b400, -0.95, 0.88, 0.25, bedGroup).rotation.z = 0.08;
 
   // 豆電球ガーランド（奥の壁に2本）
   const bulbGeo = new THREE.SphereGeometry(0.055, 10, 10);
@@ -209,39 +213,39 @@
   };
   // ポスター2枚（星／月）
   poster(canvasTex(128, 160, (g, w, h) => {
-    g.fillStyle = "#f3ead8"; g.fillRect(0, 0, w, h);
-    g.fillStyle = "#2c7a70"; g.beginPath();
+    g.fillStyle = "#202024"; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#f5c518"; g.beginPath();
     const cx = w / 2, cy = h / 2 - 8, R = 38, r = 16;
     for (let i = 0; i < 10; i++) {
       const a = -Math.PI / 2 + i * Math.PI / 5, rad = i % 2 ? r : R;
       g[i ? "lineTo" : "moveTo"](cx + Math.cos(a) * rad, cy + Math.sin(a) * rad);
     }
     g.closePath(); g.fill();
-    g.fillStyle = "#c96f2e"; g.font = "bold 17px sans-serif"; g.textAlign = "center";
+    g.fillStyle = "#f5c518"; g.font = "bold 17px sans-serif"; g.textAlign = "center";
     g.fillText("my star", cx, h - 18);
   }), 0.85, 1.06, 1.9, 4.35, -4.32);
   poster(canvasTex(128, 160, (g, w, h) => {
-    g.fillStyle = "#22355e"; g.fillRect(0, 0, w, h);
-    g.fillStyle = "#f5f0e6";
+    g.fillStyle = "#141416"; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#d8d8d8";
     for (let i = 0; i < 22; i++) g.fillRect(Math.random() * w, Math.random() * h, 2, 2);
-    g.fillStyle = "#e8c85a"; g.beginPath(); g.arc(w / 2, h / 2 - 10, 30, 0, 7); g.fill();
-    g.fillStyle = "#22355e"; g.beginPath(); g.arc(w / 2 + 14, h / 2 - 18, 26, 0, 7); g.fill();
-    g.fillStyle = "#f5f0e6"; g.font = "bold 15px sans-serif"; g.textAlign = "center";
+    g.fillStyle = "#f5c518"; g.beginPath(); g.arc(w / 2, h / 2 - 10, 30, 0, 7); g.fill();
+    g.fillStyle = "#141416"; g.beginPath(); g.arc(w / 2 + 14, h / 2 - 18, 26, 0, 7); g.fill();
+    g.fillStyle = "#e8e2d2"; g.font = "bold 15px sans-serif"; g.textAlign = "center";
     g.fillText("good night", w / 2, h - 16);
   }), 0.85, 1.06, 2.95, 4.3, -4.32);
-  // ON AIR サイン
+  // ON AIR サイン（黄色ネオン）
   poster(canvasTex(256, 96, (g, w, h) => {
-    g.fillStyle = "#1a0f1e"; g.fillRect(0, 0, w, h);
-    g.strokeStyle = "#ff7ab0"; g.lineWidth = 5; g.strokeRect(6, 6, w - 12, h - 12);
-    g.fillStyle = "#ff7ab0"; g.beginPath(); g.arc(38, h / 2, 11, 0, 7); g.fill();
-    g.font = "bold 44px sans-serif"; g.textAlign = "center";
+    g.fillStyle = "#101012"; g.fillRect(0, 0, w, h);
+    g.strokeStyle = "#ffd23d"; g.lineWidth = 5; g.strokeRect(6, 6, w - 12, h - 12);
+    g.fillStyle = "#ff4444"; g.beginPath(); g.arc(38, h / 2, 11, 0, 7); g.fill();
+    g.fillStyle = "#ffd23d"; g.font = "bold 44px sans-serif"; g.textAlign = "center";
     g.fillText("ON AIR", w / 2 + 18, h / 2 + 16);
   }), 1.5, 0.56, -1.6, 4.9, -4.32);
-  // 壁掛け時計
+  // 壁掛け時計（左の壁寄りへ移動）
   const clockFace = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.07, 28), mat(0xf3ead8));
-  clockFace.rotation.x = Math.PI / 2; clockFace.position.set(4.35, 4.55, -4.3); scene.add(clockFace);
-  box(0.05, 0.3, 0.03, 0x333333, 4.35, 4.68, -4.25).rotation.z = -0.5;
-  box(0.04, 0.24, 0.03, 0x333333, 4.42, 4.5, -4.25).rotation.z = -1.2;
+  clockFace.rotation.x = Math.PI / 2; clockFace.position.set(-3.45, 4.5, -4.3); scene.add(clockFace);
+  box(0.05, 0.3, 0.03, 0x333333, -3.45, 4.63, -4.25).rotation.z = -0.5;
+  box(0.04, 0.24, 0.03, 0x333333, -3.38, 4.45, -4.25).rotation.z = -1.2;
   // ベッドのぬいぐるみ（くま）
   const plush = new THREE.Group(); plush.position.set(0.85, 0.86, 0.25); bedGroup.add(plush);
   const plushMat = mat(0xd9a0b8);
@@ -253,45 +257,121 @@
   sph(0.07, -0.12, 0.62, 0, plush); sph(0.07, 0.12, 0.62, 0, plush);
   sph(0.09, 0, 0.42, 0.14, plush, mat(0xf3d9e2));
   // ラグの上のクッション
-  for (const [x, z, col, rz] of [[2.15, 1.75, 0xe8853d, 0.4], [-1.5, 2.05, 0x2c7a70, -0.3]]) {
+  for (const [x, z, col, rz] of [[2.15, 1.75, 0xe8b400, 0.4], [-1.5, 2.05, 0x3a3a3e, -0.3]]) {
     const cu = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.5, 0.2, 22), mat(col));
     cu.position.set(x, 0.14, z); cu.rotation.y = rz; scene.add(cu);
   }
-  // ベッド脇のサイドテーブルと観葉植物
-  const sideTop = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.07, 22), mat(0x8a6844));
-  sideTop.position.set(1.85, 0.85, -3.7); scene.add(sideTop);
-  const sideLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.85, 10), mat(0x77572f));
-  sideLeg.position.set(1.85, 0.42, -3.7); scene.add(sideLeg);
+  // ベッド脇のサイドテーブルと観葉植物（ベッドの移動に合わせて）
+  const sideTop = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.07, 22), mat(0x333338));
+  sideTop.position.set(3.5, 0.85, 2.15); scene.add(sideTop);
+  const sideLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.85, 10), mat(0x2a2a2e));
+  sideLeg.position.set(3.5, 0.42, 2.15); scene.add(sideLeg);
   const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.08, 0.16, 14), mat(0xb8563e));
-  pot.position.set(1.85, 0.97, -3.7); scene.add(pot);
-  sph(0.17, 1.85, 1.22, -3.7, scene, mat(0x3f7d4e));
-  sph(0.12, 1.7, 1.12, -3.6, scene, mat(0x4c9159));
-  sph(0.12, 2.0, 1.14, -3.8, scene, mat(0x4c9159));
+  pot.position.set(3.5, 0.97, 2.15); scene.add(pot);
+  sph(0.17, 3.5, 1.22, 2.15, scene, mat(0x3f7d4e));
+  sph(0.12, 3.35, 1.12, 2.25, scene, mat(0x4c9159));
+  sph(0.12, 3.65, 1.14, 2.05, scene, mat(0x4c9159));
   // 天井のペンダントライト
   const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.9, 6), mat(0x222222));
   cord.position.set(0.4, 6.15, 0.3); scene.add(cord);
   const pendant = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.4, 24, 1, true),
-    new THREE.MeshStandardMaterial({ color: 0xffd9a0, emissive: 0xffb45c, emissiveIntensity: 0.7, side: THREE.DoubleSide }));
+    new THREE.MeshStandardMaterial({ color: 0xe8b400, emissive: 0xffb45c, emissiveIntensity: 0.7, side: THREE.DoubleSide }));
   pendant.position.set(0.4, 5.55, 0.3); scene.add(pendant);
   // 右の壁の写真ストリング
   for (let i = 0; i < 5; i++) {
     const card = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.42),
-      mat([0xf3ead8, 0xf5d9e2, 0xd9e8f5, 0xfdf3c8, 0xd9f0dd][i]));
+      mat([0xf5c518, 0xe8e2d2, 0x3a3a3e, 0xf5e9c8, 0x8a8a8a][i]));
     card.position.set(5.8, 3.75 - Math.sin(i / 4 * Math.PI) * 0.18, -1.7 + i * 0.62);
     card.rotation.y = -Math.PI / 2; card.rotation.z = (i % 2 ? -1 : 1) * 0.07;
     scene.add(card);
   }
-  // 床の本と収納ボックス
-  box(0.5, 0.05, 0.36, 0xb8563e, -2.3, 0.05, 1.3).rotation.y = 0.5;
-  box(0.44, 0.05, 0.32, 0x3e6fb8, -2.25, 0.1, 1.28).rotation.y = 0.2;
-  box(0.9, 0.62, 0.7, 0xd9a0b8, 5.35, 0.31, 2.3);
-  box(0.75, 0.5, 0.6, 0x8fb8d8, 5.35, 0.87, 2.3);
+  // 床の本と収納ボックス（左手前の隅へ）
+  box(0.5, 0.05, 0.36, 0x8a4a3a, -2.3, 0.05, 1.3).rotation.y = 0.5;
+  box(0.44, 0.05, 0.32, 0xe8b400, -2.25, 0.1, 1.28).rotation.y = 0.2;
+  box(0.9, 0.62, 0.7, 0x3a3a3e, -5.25, 0.31, 2.45);
+  box(0.75, 0.5, 0.6, 0xe8b400, -5.25, 0.87, 2.45);
   // 窓辺の小さい鉢植え
   for (const z of [-1.3, 0.7]) {
     const p = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.06, 0.12, 12), mat(0xe8e2d2));
     p.position.set(-5.8, 1.72, z); scene.add(p);
     sph(0.1, -5.8, 1.88, z, scene, mat(0x4c9159));
   }
+
+  // ---------- ボイラーと配管と制御盤 ----------
+  const hazardTex = canvasTex(128, 32, (g, w, h) => {
+    g.fillStyle = "#151517"; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#f5c518";
+    for (let x = -h; x < w + h; x += 32) {
+      g.beginPath();
+      g.moveTo(x, h); g.lineTo(x + 16, 0); g.lineTo(x + 32, 0); g.lineTo(x + 16, h);
+      g.closePath(); g.fill();
+    }
+  });
+  hazardTex.wrapS = THREE.RepeatWrapping; hazardTex.repeat.set(3, 1);
+  const metal = (c) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.55 });
+  const boiler = new THREE.Group(); boiler.position.set(4.35, 0, -3.15); scene.add(boiler);
+  const bBody = new THREE.Mesh(new THREE.CylinderGeometry(1.05, 1.05, 3.3, 28), metal(0x2b2b30));
+  bBody.position.y = 1.65; boiler.add(bBody);
+  const bCap = new THREE.Mesh(new THREE.SphereGeometry(1.05, 24, 12), metal(0x2b2b30));
+  bCap.scale.y = 0.42; bCap.position.y = 3.3; boiler.add(bCap);
+  const bBandLow = new THREE.Mesh(new THREE.CylinderGeometry(1.08, 1.08, 0.32, 28),
+    new THREE.MeshStandardMaterial({ map: hazardTex, roughness: 0.7 }));
+  bBandLow.position.y = 0.38; boiler.add(bBandLow);
+  const bBandTop = new THREE.Mesh(new THREE.CylinderGeometry(1.08, 1.08, 0.16, 28), metal(0xe8b400));
+  bBandTop.position.y = 2.62; boiler.add(bBandTop);
+  const bDoor = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.07, 24), metal(0x17171a));
+  bDoor.rotation.x = Math.PI / 2; bDoor.position.set(0, 1.05, 1.06); boiler.add(bDoor);
+  const bRim = new THREE.Mesh(new THREE.TorusGeometry(0.4, 0.04, 10, 28), metal(0xe8b400));
+  bRim.position.set(0, 1.05, 1.1); boiler.add(bRim);
+  box(0.2, 0.05, 0.05, 0xe8b400, 0, 1.05, 1.14, boiler);
+  const bGauge = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.05, 20), mat(0xf3ead8));
+  bGauge.rotation.x = Math.PI / 2; bGauge.position.set(0, 2.12, 1.06); boiler.add(bGauge);
+  box(0.03, 0.11, 0.02, 0xc23b2e, 0.02, 2.16, 1.1, boiler).rotation.z = -0.6;
+  // バルブ（赤ハンドル）
+  const stub = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.4, 10), metal(0x3d3d42));
+  stub.rotation.z = Math.PI / 2; stub.position.set(3.12, 1.8, -3.15); scene.add(stub);
+  const valve = new THREE.Mesh(new THREE.TorusGeometry(0.19, 0.032, 10, 24), metal(0xc23b2e));
+  valve.rotation.y = Math.PI / 2; valve.position.set(2.9, 1.8, -3.15); scene.add(valve);
+  // 配管
+  const pipe = (r, len, x, y, z, axis) => {
+    const p = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 14), metal(0x3d3d42));
+    if (axis === "x") p.rotation.z = Math.PI / 2;
+    if (axis === "z") p.rotation.x = Math.PI / 2;
+    p.position.set(x, y, z); scene.add(p); return p;
+  };
+  pipe(0.09, 3.3, 4.35, 4.95, -3.15, "y");
+  pipe(0.09, 6.4, 1.15, 6.2, -3.15, "x");
+  pipe(0.07, 1.7, -2.05, 5.35, -3.15, "y");
+  pipe(0.07, 8.6, 0.2, 5.55, -4.18, "x");
+  for (const bx of [-3, 0.5, 3.5]) pipe(0.088, 0.16, bx, 5.55, -4.18, "x");
+  for (const bx of [-1.2, 2.2]) pipe(0.105, 0.14, bx, 6.2, -3.15, "x");
+  // 床のハザードライン
+  const hazardFloor = new THREE.Mesh(new THREE.PlaneGeometry(2.9, 0.55),
+    new THREE.MeshStandardMaterial({ map: hazardTex, roughness: 0.8 }));
+  hazardFloor.rotation.x = -Math.PI / 2; hazardFloor.position.set(4.35, 0.02, -1.5);
+  scene.add(hazardFloor);
+  // 制御盤（ランプが点滅する）
+  box(1.5, 1.0, 0.14, 0x1b1b1f, -3.1, 2.6, -4.32);
+  const lampCols = [0x3fe08a, 0xffd23d, 0x3fe08a, 0x8a8a8a, 0xffd23d, 0x3fe08a];
+  lampCols.forEach((c, i) => {
+    const dot = new THREE.Mesh(new THREE.PlaneGeometry(0.1, 0.1),
+      new THREE.MeshBasicMaterial({ color: c }));
+    dot.position.set(-3.62 + (i % 3) * 0.52, 2.82 - Math.floor(i / 3) * 0.42, -4.24);
+    scene.add(dot);
+  });
+  const panelLight = new THREE.Mesh(new THREE.PlaneGeometry(0.13, 0.13),
+    new THREE.MeshBasicMaterial({ color: 0xff3333 }));
+  panelLight.position.set(-2.32, 2.28, -4.24);
+  scene.add(panelLight);
+  // ドラム缶とクレート
+  const barrel1 = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.85, 18), metal(0xd8a800));
+  barrel1.position.set(-5.35, 0.43, 0.75); scene.add(barrel1);
+  const barrel2 = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.85, 18), metal(0x2e2e33));
+  barrel2.position.set(-4.6, 0.43, 1.08); scene.add(barrel2);
+  const barrelBand = new THREE.Mesh(new THREE.CylinderGeometry(0.335, 0.335, 0.12, 18), metal(0xe8b400));
+  barrelBand.position.set(-4.6, 0.55, 1.08); scene.add(barrelBand);
+  box(0.72, 0.6, 0.72, 0x35353a, -4.35, 0.3, -3.95);
+  box(0.55, 0.45, 0.55, 0xe8b400, -4.35, 0.83, -3.95).rotation.y = 0.3;
 
   // ---------- リリンちゃん（緑背景を抜いて立体の中に立たせる） ----------
   const PACK_W = 896, PACK_H = 768, CHAR_W = 2.75, CHAR_H = CHAR_W * PACK_H / PACK_W;
@@ -473,6 +553,7 @@
     camera.position.y = 2.7 + Math.sin(t * 0.1) * 0.14 - my * 0.4;
     camera.lookAt(0.2, 1.95, -0.6);
     lampLight.intensity = lampLevel + Math.sin(t * 11) * 0.03 + Math.sin(t * 23.7) * 0.02;
+    if (typeof panelLight !== "undefined") panelLight.visible = (t % 1.4) < 1.0;
     const pos = dust.geometry.attributes.position;
     for (let i = 0; i < dustCount; i++) {
       const [bx, by, bz, ph] = dustBase[i];
