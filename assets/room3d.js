@@ -373,6 +373,127 @@
   box(0.72, 0.6, 0.72, 0x35353a, -4.35, 0.3, -3.95);
   box(0.55, 0.45, 0.55, 0xe8b400, -4.35, 0.83, -3.95).rotation.y = 0.3;
 
+  // ---------- 手前の放送カウンター（彼女が上半身だけ見える構図に） ----------
+  const desk2 = new THREE.Group(); desk2.position.set(0.45, 0, 1.75); scene.add(desk2);
+  box(4.4, 0.12, 0.85, 0x242428, 0, 1.22, 0, desk2);
+  box(4.4, 1.16, 0.08, 0x1b1b1f, 0, 0.6, 0.38, desk2);
+  box(0.08, 1.16, 0.85, 0x1b1b1f, -2.16, 0.6, 0, desk2);
+  box(0.08, 1.16, 0.85, 0x1b1b1f, 2.16, 0.6, 0, desk2);
+  box(4.4, 0.07, 0.03, 0xe8b400, 0, 1.12, 0.43, desk2);
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(1.15, 0.36),
+    new THREE.MeshStandardMaterial({ map: canvasTex(256, 80, (g, w, h) => {
+      g.fillStyle = "#101012"; g.fillRect(0, 0, w, h);
+      g.strokeStyle = "#ffd23d"; g.lineWidth = 5; g.strokeRect(5, 5, w - 10, h - 10);
+      g.fillStyle = "#ff4444"; g.beginPath(); g.arc(34, h / 2, 9, 0, 7); g.fill();
+      g.fillStyle = "#ffd23d"; g.font = "bold 38px sans-serif"; g.textAlign = "center";
+      g.fillText("ON AIR", w / 2 + 14, h / 2 + 14);
+    }), roughness: 0.9 }));
+  plate.position.set(0, 0.62, 0.43); desk2.add(plate);
+  // カウンターの上の小物：ノートPC・紙・ヘッドホン・マグ
+  box(0.55, 0.03, 0.38, 0x2c2c30, -1.55, 1.3, -0.05, desk2);
+  const lapScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.34),
+    new THREE.MeshBasicMaterial({ color: 0x86c5c0 }));
+  lapScreen.position.set(-1.55, 1.47, -0.26); lapScreen.rotation.x = -0.28; desk2.add(lapScreen);
+  box(0.55, 0.36, 0.02, 0x2c2c30, -1.55, 1.46, -0.28, desk2).rotation.x = -0.28;
+  box(0.42, 0.015, 0.3, 0xf0ead8, -0.55, 1.29, 0.1, desk2).rotation.y = 0.3;
+  box(0.42, 0.015, 0.3, 0xe8e2d2, 0.15, 1.29, 0.16, desk2).rotation.y = -0.2;
+  const phones = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.032, 8, 20, Math.PI), mat(0x1c1c1f));
+  phones.position.set(-1.05, 1.29, 0.18); phones.rotation.x = -Math.PI / 2; phones.rotation.z = 0.5;
+  desk2.add(phones);
+  const mug2 = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.14, 16), mat(0xe8b400));
+  mug2.position.set(1.75, 1.35, 0.15); desk2.add(mug2);
+  desk2.traverse(o => { o.userData.hotspot = "radio"; });
+  // マイク（スタンド＋ブーム＋本体）※シーンスペースで組み立て
+  const micStand = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.19, 0.05, 18), mat(0x1c1c1f));
+  micStand.position.set(1.3, 1.3, 1.6); scene.add(micStand);
+  const micPole = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.5, 8), mat(0x2c2c30));
+  micPole.position.set(1.3, 1.55, 1.6); scene.add(micPole);
+  const micArm = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.62, 8), mat(0x2c2c30));
+  micArm.position.set(1.13, 1.83, 1.38);
+  micArm.lookAt(0.98, 1.9, 1.14); micArm.rotateX(Math.PI / 2);
+  scene.add(micArm);
+  const micBody = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.065, 0.24, 14), mat(0x242428));
+  micBody.position.set(0.95, 1.88, 1.08); micBody.rotation.z = 0.7; micBody.rotation.x = 0.4;
+  scene.add(micBody);
+  const micRing = new THREE.Mesh(new THREE.TorusGeometry(0.062, 0.012, 8, 18), mat(0xe8b400));
+  micRing.position.set(0.99, 1.95, 1.13); micRing.rotation.x = Math.PI / 2 - 0.4; micRing.rotation.y = 0.7;
+  scene.add(micRing);
+  for (const m of [micStand, micPole, micArm, micBody, micRing]) m.userData.hotspot = "radio";
+
+  // ---------- 小物を増やす（作業台・ファン・はしご・消火器ほか） ----------
+  // 作業台とツールボード
+  box(2.3, 0.1, 0.8, 0x333338, -0.6, 0.95, -4.0);
+  for (const [lx, lz] of [[-1.65, -4.3], [0.45, -4.3], [-1.65, -3.7], [0.45, -3.7]])
+    box(0.08, 0.95, 0.08, 0x2a2a2e, lx, 0.48, lz);
+  box(1.9, 1.1, 0.05, 0x242428, -0.6, 2.25, -4.3);
+  box(0.08, 0.5, 0.04, 0xe8b400, -1.25, 2.3, -4.26);
+  box(0.07, 0.42, 0.04, 0x8a8a8a, -0.85, 2.26, -4.26);
+  box(0.16, 0.3, 0.04, 0xc23b2e, -0.35, 2.32, -4.26);
+  const canGeo = new THREE.CylinderGeometry(0.07, 0.07, 0.18, 12);
+  for (const [cx, cc] of [[-1.4, 0xe8b400], [-1.2, 0x3a3a3e], [0.25, 0x8a4a3a]]) {
+    const can = new THREE.Mesh(canGeo, mat(cc));
+    can.position.set(cx, 1.09, -4.05); scene.add(can);
+  }
+  const stoolSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.27, 0.07, 18), mat(0xe8b400));
+  stoolSeat.position.set(-0.15, 0.56, -3.25); scene.add(stoolSeat);
+  const stoolLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.53, 10), mat(0x2a2a2e));
+  stoolLeg.position.set(-0.15, 0.27, -3.25); scene.add(stoolLeg);
+  const toolbox = box(0.55, 0.28, 0.3, 0xc23b2e, 1.15, 0.14, -3.35);
+  const tbHandle = new THREE.Mesh(new THREE.TorusGeometry(0.13, 0.02, 8, 16, Math.PI), mat(0x1c1c1f));
+  tbHandle.position.set(1.15, 0.29, -3.35); scene.add(tbHandle);
+  // 壁のファン（回る）
+  const fanGroup = new THREE.Group(); fanGroup.position.set(0.55, 4.65, -4.3); scene.add(fanGroup);
+  const fanRing = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.045, 10, 28), metal(0x2c2c30));
+  fanGroup.add(fanRing);
+  const fanBlades = new THREE.Group(); fanGroup.add(fanBlades);
+  for (let i = 0; i < 3; i++) {
+    const blade = new THREE.Mesh(new THREE.PlaneGeometry(0.17, 0.4),
+      new THREE.MeshStandardMaterial({ color: 0xd8a800, roughness: 0.6, side: THREE.DoubleSide }));
+    blade.position.y = 0.22;
+    const holder = new THREE.Group();
+    holder.rotation.z = i * Math.PI * 2 / 3;
+    holder.add(blade); fanBlades.add(holder);
+  }
+  const fanHub = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.08, 14), metal(0x2c2c30));
+  fanHub.rotation.x = Math.PI / 2; fanGroup.add(fanHub);
+  // 追加の計器
+  for (const [gx, gy, gr] of [[-2.2, 3.45, 0.13], [-1.82, 3.36, 0.1]]) {
+    const gg = new THREE.Mesh(new THREE.CylinderGeometry(gr, gr, 0.04, 18), mat(0xf3ead8));
+    gg.rotation.x = Math.PI / 2; gg.position.set(gx, gy, -4.32); scene.add(gg);
+  }
+  // ボイラーへのはしご
+  const ladder = new THREE.Group(); ladder.position.set(3.28, 1.45, -1.8); ladder.rotation.x = -0.22;
+  scene.add(ladder);
+  box(0.05, 3.1, 0.04, 0xd8a800, -0.26, 0, 0, ladder);
+  box(0.05, 3.1, 0.04, 0xd8a800, 0.26, 0, 0, ladder);
+  for (let i = 0; i < 5; i++) {
+    const rung = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.022, 0.5, 8), metal(0xd8a800));
+    rung.rotation.z = Math.PI / 2; rung.position.y = -1.2 + i * 0.6; ladder.add(rung);
+  }
+  // 消火器
+  const extBody = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.11, 0.42, 14), mat(0xc23b2e));
+  extBody.position.set(2.55, 0.21, -2.35); scene.add(extBody);
+  const extTop = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.12, 8), mat(0x1c1c1f));
+  extTop.position.set(2.55, 0.48, -2.35); scene.add(extTop);
+  // 追加配管とホースのコイル
+  pipe(0.05, 3.2, 5.56, 1.6, -3.0, "y");
+  const hose = new THREE.Mesh(new THREE.TorusGeometry(0.42, 0.06, 10, 26), mat(0x1c1c1f));
+  hose.position.set(5.82, 2.9, -1.9); hose.rotation.y = Math.PI / 2; scene.add(hose);
+  // 天井を横切る電球のスワッグ
+  for (let i = 0; i <= 10; i++) {
+    const t = i / 10, x = -4.6 + t * 9.2;
+    const b = new THREE.Mesh(bulbGeo, bulbMat);
+    b.position.set(x, 5.7 - Math.sin(t * Math.PI) * 0.5, 1.3);
+    scene.add(b);
+  }
+  // 警告サイン（右の壁）
+  poster(canvasTex(96, 96, (g, w, h) => {
+    g.fillStyle = "#f5c518"; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#151517"; g.font = "bold 62px sans-serif"; g.textAlign = "center";
+    g.fillText("!", w / 2, h / 2 + 16);
+    g.font = "bold 15px sans-serif"; g.fillText("CAUTION", w / 2, h - 10);
+  }), 0.52, 0.52, 5.82, 2.3, -3.1, -Math.PI / 2);
+
   // ---------- リリンちゃん（緑背景を抜いて立体の中に立たせる） ----------
   const PACK_W = 896, PACK_H = 768, CHAR_W = 2.75, CHAR_H = CHAR_W * PACK_H / PACK_W;
   const charGroup = new THREE.Group();
@@ -554,6 +675,7 @@
     camera.lookAt(0.2, 1.95, -0.6);
     lampLight.intensity = lampLevel + Math.sin(t * 11) * 0.03 + Math.sin(t * 23.7) * 0.02;
     if (typeof panelLight !== "undefined") panelLight.visible = (t % 1.4) < 1.0;
+    if (typeof fanBlades !== "undefined") fanBlades.rotation.z = -t * 2.6;
     const pos = dust.geometry.attributes.position;
     for (let i = 0; i < dustCount; i++) {
       const [bx, by, bz, ph] = dustBase[i];
