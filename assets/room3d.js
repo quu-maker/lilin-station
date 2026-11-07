@@ -192,10 +192,111 @@
   }));
   scene.add(dust);
 
+  // ---------- 部屋のおめかし（ポスター・ぬいぐるみ・小物） ----------
+  function canvasTex(w, h, draw) {
+    const c = document.createElement("canvas");
+    c.width = w; c.height = h;
+    draw(c.getContext("2d"), w, h);
+    const t = new THREE.CanvasTexture(c);
+    t.encoding = THREE.sRGBEncoding;
+    return t;
+  }
+  const poster = (tex, w, h, x, y, z, ry) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h),
+      new THREE.MeshStandardMaterial({ map: tex, roughness: 0.9 }));
+    m.position.set(x, y, z); m.rotation.y = ry || 0;
+    scene.add(m); return m;
+  };
+  // ポスター2枚（星／月）
+  poster(canvasTex(128, 160, (g, w, h) => {
+    g.fillStyle = "#f3ead8"; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#2c7a70"; g.beginPath();
+    const cx = w / 2, cy = h / 2 - 8, R = 38, r = 16;
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + i * Math.PI / 5, rad = i % 2 ? r : R;
+      g[i ? "lineTo" : "moveTo"](cx + Math.cos(a) * rad, cy + Math.sin(a) * rad);
+    }
+    g.closePath(); g.fill();
+    g.fillStyle = "#c96f2e"; g.font = "bold 17px sans-serif"; g.textAlign = "center";
+    g.fillText("my star", cx, h - 18);
+  }), 0.85, 1.06, 1.9, 4.35, -4.32);
+  poster(canvasTex(128, 160, (g, w, h) => {
+    g.fillStyle = "#22355e"; g.fillRect(0, 0, w, h);
+    g.fillStyle = "#f5f0e6";
+    for (let i = 0; i < 22; i++) g.fillRect(Math.random() * w, Math.random() * h, 2, 2);
+    g.fillStyle = "#e8c85a"; g.beginPath(); g.arc(w / 2, h / 2 - 10, 30, 0, 7); g.fill();
+    g.fillStyle = "#22355e"; g.beginPath(); g.arc(w / 2 + 14, h / 2 - 18, 26, 0, 7); g.fill();
+    g.fillStyle = "#f5f0e6"; g.font = "bold 15px sans-serif"; g.textAlign = "center";
+    g.fillText("good night", w / 2, h - 16);
+  }), 0.85, 1.06, 2.95, 4.3, -4.32);
+  // ON AIR サイン
+  poster(canvasTex(256, 96, (g, w, h) => {
+    g.fillStyle = "#1a0f1e"; g.fillRect(0, 0, w, h);
+    g.strokeStyle = "#ff7ab0"; g.lineWidth = 5; g.strokeRect(6, 6, w - 12, h - 12);
+    g.fillStyle = "#ff7ab0"; g.beginPath(); g.arc(38, h / 2, 11, 0, 7); g.fill();
+    g.font = "bold 44px sans-serif"; g.textAlign = "center";
+    g.fillText("ON AIR", w / 2 + 18, h / 2 + 16);
+  }), 1.5, 0.56, -1.6, 4.9, -4.32);
+  // 壁掛け時計
+  const clockFace = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.07, 28), mat(0xf3ead8));
+  clockFace.rotation.x = Math.PI / 2; clockFace.position.set(4.35, 4.55, -4.3); scene.add(clockFace);
+  box(0.05, 0.3, 0.03, 0x333333, 4.35, 4.68, -4.25).rotation.z = -0.5;
+  box(0.04, 0.24, 0.03, 0x333333, 4.42, 4.5, -4.25).rotation.z = -1.2;
+  // ベッドのぬいぐるみ（くま）
+  const plush = new THREE.Group(); plush.position.set(0.85, 0.86, 0.25); bedGroup.add(plush);
+  const plushMat = mat(0xd9a0b8);
+  const sph = (r, x, y, z, parent, material) => {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 18, 14), material || plushMat);
+    m.position.set(x, y, z); parent.add(m); return m;
+  };
+  sph(0.21, 0, 0.18, 0, plush); sph(0.16, 0, 0.48, 0, plush);
+  sph(0.07, -0.12, 0.62, 0, plush); sph(0.07, 0.12, 0.62, 0, plush);
+  sph(0.09, 0, 0.42, 0.14, plush, mat(0xf3d9e2));
+  // ラグの上のクッション
+  for (const [x, z, col, rz] of [[2.15, 1.75, 0xe8853d, 0.4], [-1.5, 2.05, 0x2c7a70, -0.3]]) {
+    const cu = new THREE.Mesh(new THREE.CylinderGeometry(0.46, 0.5, 0.2, 22), mat(col));
+    cu.position.set(x, 0.14, z); cu.rotation.y = rz; scene.add(cu);
+  }
+  // ベッド脇のサイドテーブルと観葉植物
+  const sideTop = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.07, 22), mat(0x8a6844));
+  sideTop.position.set(1.85, 0.85, -3.7); scene.add(sideTop);
+  const sideLeg = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.07, 0.85, 10), mat(0x77572f));
+  sideLeg.position.set(1.85, 0.42, -3.7); scene.add(sideLeg);
+  const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.08, 0.16, 14), mat(0xb8563e));
+  pot.position.set(1.85, 0.97, -3.7); scene.add(pot);
+  sph(0.17, 1.85, 1.22, -3.7, scene, mat(0x3f7d4e));
+  sph(0.12, 1.7, 1.12, -3.6, scene, mat(0x4c9159));
+  sph(0.12, 2.0, 1.14, -3.8, scene, mat(0x4c9159));
+  // 天井のペンダントライト
+  const cord = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.9, 6), mat(0x222222));
+  cord.position.set(0.4, 6.15, 0.3); scene.add(cord);
+  const pendant = new THREE.Mesh(new THREE.ConeGeometry(0.42, 0.4, 24, 1, true),
+    new THREE.MeshStandardMaterial({ color: 0xffd9a0, emissive: 0xffb45c, emissiveIntensity: 0.7, side: THREE.DoubleSide }));
+  pendant.position.set(0.4, 5.55, 0.3); scene.add(pendant);
+  // 右の壁の写真ストリング
+  for (let i = 0; i < 5; i++) {
+    const card = new THREE.Mesh(new THREE.PlaneGeometry(0.34, 0.42),
+      mat([0xf3ead8, 0xf5d9e2, 0xd9e8f5, 0xfdf3c8, 0xd9f0dd][i]));
+    card.position.set(5.8, 3.75 - Math.sin(i / 4 * Math.PI) * 0.18, -1.7 + i * 0.62);
+    card.rotation.y = -Math.PI / 2; card.rotation.z = (i % 2 ? -1 : 1) * 0.07;
+    scene.add(card);
+  }
+  // 床の本と収納ボックス
+  box(0.5, 0.05, 0.36, 0xb8563e, -2.3, 0.05, 1.3).rotation.y = 0.5;
+  box(0.44, 0.05, 0.32, 0x3e6fb8, -2.25, 0.1, 1.28).rotation.y = 0.2;
+  box(0.9, 0.62, 0.7, 0xd9a0b8, 5.35, 0.31, 2.3);
+  box(0.75, 0.5, 0.6, 0x8fb8d8, 5.35, 0.87, 2.3);
+  // 窓辺の小さい鉢植え
+  for (const z of [-1.3, 0.7]) {
+    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.06, 0.12, 12), mat(0xe8e2d2));
+    p.position.set(-5.8, 1.72, z); scene.add(p);
+    sph(0.1, -5.8, 1.88, z, scene, mat(0x4c9159));
+  }
+
   // ---------- リリンちゃん（緑背景を抜いて立体の中に立たせる） ----------
-  const PACK_W = 896, PACK_H = 768, CHAR_W = 2.35, CHAR_H = CHAR_W * PACK_H / PACK_W;
+  const PACK_W = 896, PACK_H = 768, CHAR_W = 2.75, CHAR_H = CHAR_W * PACK_H / PACK_W;
   const charGroup = new THREE.Group();
-  charGroup.position.set(0.55, 0, -1.15);
+  charGroup.position.set(0.45, 0, 0.55);
   scene.add(charGroup);
 
   function keyedTexture(url) {
