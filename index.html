@@ -7,27 +7,49 @@
 <meta name="description" content="リリンちゃんが案内する、Lqkoa のためのステーション。建築ラジオ、語学の学習室、作品室の3つの部屋があります。">
 <link rel="stylesheet" href="assets/site.css">
 <style>
-#chooser{position:fixed;inset:0;z-index:50;background:var(--ink);overflow:auto;
-  display:flex;flex-direction:column;align-items:center;padding:26px 16px 34px}
+#chooser{position:fixed;inset:0;z-index:50;overflow:auto;background:#0a2e26;
+  display:flex;flex-direction:column;align-items:center;padding:16px 14px 20px}
 #chooser.hide{display:none}
-#chooser .stagebox{width:min(300px,72vw);margin-top:6px}
-#chooser .bubble{max-width:420px;width:100%}
-#chooser .choices{display:flex;flex-direction:column;gap:12px;width:min(420px,100%);margin-top:20px}
-#chooser .choice{display:flex;align-items:center;gap:14px;text-decoration:none;text-align:left;
-  background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;
-  transition:transform .15s,border-color .15s}
+#chooser .room-bg{position:absolute;inset:0;background:url("assets/room-menu.webp") center/cover no-repeat;
+  animation:kenburns 46s ease-in-out infinite alternate}
+@keyframes kenburns{from{transform:scale(1)}to{transform:scale(1.07)}}
+#chooser .shade{position:absolute;inset:0;background:linear-gradient(to bottom,rgba(4,10,10,.14) 40%,rgba(4,10,10,.5))}
+#chooser .mote{position:absolute;border-radius:50%;pointer-events:none;z-index:1;
+  background:radial-gradient(circle,rgba(255,214,150,.85) 0%,rgba(255,214,150,0) 70%);
+  animation:drift ease-in-out infinite alternate}
+@keyframes drift{from{transform:translateY(14px)}to{transform:translateY(-18px)}}
+#chooser .stagebox{position:relative;z-index:2;width:min(320px,58vw);margin-top:auto}
+#chooser .lilin-stage{background:transparent;border-radius:0;
+  -webkit-mask-image:radial-gradient(ellipse 71% 65% at 50% 46%,#000 55%,transparent 76%);
+  mask-image:radial-gradient(ellipse 71% 65% at 50% 46%,#000 55%,transparent 76%)}
+#chooser .choices{position:relative;z-index:2;display:flex;flex-wrap:wrap;justify-content:center;gap:12px;margin-top:10px}
+#chooser .choice{display:flex;align-items:center;gap:12px;text-decoration:none;text-align:left;
+  background:rgba(11,16,26,.68);border:1px solid rgba(255,255,255,.24);border-radius:16px;padding:13px 18px;
+  backdrop-filter:blur(6px);transition:transform .15s,border-color .15s}
 #chooser .choice:hover{transform:translateY(-2px);border-color:var(--teal)}
-#chooser .choice .icon{font-size:34px}
-#chooser .choice h2{margin:0;font-size:21px}
-#chooser .choice p{margin:3px 0 0;color:var(--muted);font-size:13px;line-height:1.5}
-#chooser .wander{margin-top:18px;background:none;border:none;color:var(--muted);
-  font-size:14px;text-decoration:underline;cursor:pointer}
+#chooser .choice .icon{font-size:30px}
+#chooser .choice h2{margin:0;font-size:19px}
+#chooser .choice p{margin:2px 0 0;color:#c3cadb;font-size:12.5px;line-height:1.5}
+#chooser .dialog{position:relative;z-index:2;width:min(560px,94vw);margin-top:16px;
+  background:rgba(9,13,20,.74);border:1px solid rgba(255,255,255,.24);border-radius:14px;
+  padding:17px 20px 13px;backdrop-filter:blur(6px)}
+#chooser .dialog .name{position:absolute;top:-11px;left:16px;background:var(--teal);color:#052e2b;
+  font-weight:700;font-size:13px;padding:2px 12px;border-radius:999px}
+#chooser .dialog p{margin:0;font-size:16.5px;line-height:1.65}
+#chooser .wander{position:relative;z-index:2;margin-top:13px;background:none;border:none;color:#d7dee9;
+  font-size:13.5px;text-decoration:underline;cursor:pointer;text-shadow:0 1px 6px #000}
 </style>
 </head>
 <body>
 <div id="chooser">
+  <div class="room-bg"></div>
+  <div class="shade"></div>
+  <span class="mote" style="width:9px;height:9px;left:18%;top:30%;animation-duration:7s"></span>
+  <span class="mote" style="width:6px;height:6px;left:30%;top:58%;animation-duration:9s"></span>
+  <span class="mote" style="width:11px;height:11px;left:74%;top:36%;animation-duration:8s"></span>
+  <span class="mote" style="width:5px;height:5px;left:84%;top:62%;animation-duration:6.5s"></span>
+  <span class="mote" style="width:7px;height:7px;left:58%;top:22%;animation-duration:10s"></span>
   <div class="stagebox" id="stageChoice"></div>
-  <div class="bubble" id="bubbleChoice">おかえりなさい！ 今日はどっちにしますか？</div>
   <div class="choices">
     <a class="choice" href="radio/">
       <span class="icon">📻</span>
@@ -38,6 +60,7 @@
       <span><h2>ドイツ語を練習する</h2><p>学習室へ。フレーズとクイズ、1日10分。</p></span>
     </a>
   </div>
+  <div class="dialog" id="bubbleChoice"><span class="name">リリン</span><p id="bubbleText">おかえりなさい！ 今日はどっちにしますか？</p></div>
   <button class="wander" id="wanderBtn" type="button">ステーションをぶらぶらする（作品室など）</button>
 </div>
 <header class="top">
@@ -101,9 +124,9 @@ function slot() {
   // 入口の選択画面（ドイツ語かラジオか）
   const chooser = document.getElementById("chooser");
   const choiceStage = await createLilinStage(document.getElementById("stageChoice"), "character/");
-  const bubbleChoice = document.getElementById("bubbleChoice");
+  const bubbleText = document.getElementById("bubbleText");
   const greet = "おかえりなさい！ 今日はどっちにしますか？";
-  bubbleChoice.textContent = greet;
+  bubbleText.textContent = greet;
   choiceStage.talk(Math.min(3600, 700 + greet.length * 90));
   document.getElementById("stageChoice").addEventListener("click", () => {
     choiceStage.smile(1200);
