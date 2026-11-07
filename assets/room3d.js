@@ -254,7 +254,6 @@
       }
       charGroup.traverse(o => { o.userData.hotspot = "lilin"; });
       charReady = true;
-      chooser.classList.add("has-3d");
       talk(3000);
     } catch (e) {
       // 3D化に失敗したら2Dのまま（何もしない）
@@ -262,6 +261,11 @@
   })();
 
   // 表情まわり（character.js と同じタイミング感覚）
+  // PACK は blinkLoop より前に宣言する（後ろだと TDZ で ReferenceError になり全体が止まる）
+  let PACK = null;
+  fetch("character/character.json").then(r => r.json()).then(j => { PACK = j; }).catch(() => {});
+  function pack_eye_blink() { return PACK && PACK.eye ? PACK.eye.blink : "blink"; }
+  function pack_eye_half() { return PACK && PACK.eye ? PACK.eye.half : "half_blink"; }
   let talkEnd = 0, smileEnd = 0, lastFlap = 0, flapIdx = -1, hopStart = -1;
   function talk(ms) { talkEnd = performance.now() + (ms || 1600); }
   function smile(ms) { smileEnd = performance.now() + (ms || 1500); }
@@ -282,10 +286,6 @@
       }, 130);
     }, 90);
   })();
-  let PACK = null;
-  fetch("character/character.json").then(r => r.json()).then(j => { PACK = j; }).catch(() => {});
-  function pack_eye_blink() { return PACK && PACK.eye ? PACK.eye.blink : "blink"; }
-  function pack_eye_half() { return PACK && PACK.eye ? PACK.eye.half : "half_blink"; }
 
   function updateExpressions(now) {
     if (!charReady) return;
@@ -391,6 +391,11 @@
       updateExpressions(now);
     }
     renderer.render(scene, camera);
+    // 2Dフォールバックを隠すのは「キャラ読み込み済み＋実際に1フレーム描けた」後だけ。
+    // 先に隠すと、描画が失敗したときに真っ黒になる。
+    if (charReady && !chooser.classList.contains("has-3d")) {
+      chooser.classList.add("has-3d");
+    }
   }
   animate();
 })();
