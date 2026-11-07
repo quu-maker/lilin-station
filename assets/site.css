@@ -1,0 +1,52 @@
+:root{
+  --ink:#0c0e14; --panel:#161a26; --text:#f2f3f7; --muted:#9aa0b4;
+  --teal:#3fe0dc; --pink:#f2a0c4; --yellow:#ffd028; --line:rgba(255,255,255,.13);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--text);font-family:"Hiragino Kaku Gothic ProN","Noto Sans JP",system-ui,sans-serif}
+a{color:inherit}
+header.top{padding:22px 20px 6px;text-align:center}
+header.top h1{margin:0;font-size:30px;letter-spacing:.04em}
+header.top p{margin:6px 0 0;color:var(--muted);font-size:14px}
+.wrap{max-width:860px;margin:0 auto;padding:14px 16px 40px}
+.stagebox{position:relative;max-width:520px;margin:14px auto 0}
+.lilin-stage{position:relative;width:100%;aspect-ratio:896/768;border-radius:16px;overflow:hidden;
+  animation:sway 5s ease-in-out infinite}
+@keyframes sway{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.lilin-base{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.lilin-part{position:absolute;height:auto;transition:opacity .05s}
+.bubble{position:relative;max-width:520px;margin:14px auto 0;background:#1d2233;border:1px solid var(--line);
+  border-radius:14px;padding:14px 18px;font-size:17px;line-height:1.6;min-height:60px}
+.bubble::before{content:"";position:absolute;top:-9px;left:50%;margin-left:-9px;width:18px;height:18px;
+  background:#1d2233;border-left:1px solid var(--line);border-top:1px solid var(--line);transform:rotate(45deg)}
+.rooms{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:26px}
+.room{display:block;text-decoration:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;
+  padding:18px;transition:transform .15s,border-color .15s}
+.room:hover{transform:translateY(-3px);border-color:var(--teal)}
+.room h2{margin:0 0 6px;font-size:20px}
+.room p{margin:0;color:var(--muted);font-size:14px;line-height:1.6}
+.room .icon{font-size:28px;display:block;margin-bottom:8px}
+footer{max-width:860px;margin:0 auto;padding:0 16px 28px;color:var(--muted);font-size:12px;line-height:1.7;text-align:center}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--teal);color:#062a29;border:none;border-radius:10px;padding:10px 18px;font-weight:700}
+.btn.sub{background:#2a3049;color:var(--text)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin-top:18px}
+.card h2{margin-top:0}
+.choices{display:grid;gap:10px;margin-top:14px}
+.choices button{background:#232842;color:var(--text);border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;text-align:left;font-size:16px}
+.choices button:hover{border-color:var(--pink)}
+.choices button.right{border-color:var(--teal);background:rgba(63,224,220,.15)}
+.choices button.wrong{border-color:var(--yellow);background:rgba(255,208,40,.12)}
+.big-de{font-size:30px;font-weight:700;margin:4px 0}
+.reading{color:var(--pink);font-size:16px}
+.meaning{color:var(--muted);font-size:16px}
+.stats{display:flex;gap:18px;color:var(--muted);font-size:14px;margin-top:12px;flex-wrap:wrap}
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:16px}
+.gallery figure{margin:0}
+.gallery img{width:100%;border-radius:10px;display:block}
+.gallery figcaption{color:var(--muted);font-size:13px;margin-top:6px}
+dialog#lightbox{border:none;background:transparent;padding:0;max-width:94vw}
+dialog#lightbox img{width:100%;border-radius:10px}
+dialog#lightbox::backdrop{background:rgba(0,0,0,.8)}
+.backlink{display:inline-block;margin-top:8px;color:var(--muted);font-size:14px}

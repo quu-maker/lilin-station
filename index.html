@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>リリン・ステーション</title>
+<meta name="description" content="リリンちゃんが案内する、Lqkoa のためのステーション。建築ラジオ、語学の学習室、作品室の3つの部屋があります。">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<header class="top">
+  <h1>リリン・ステーション</h1>
+  <p>リリンちゃんが住んでいる、Lqkoa のための小さなステーション</p>
+</header>
+<div class="wrap">
+  <div class="stagebox" id="stage"></div>
+  <div class="bubble" id="bubble">……</div>
+
+  <nav class="rooms">
+    <a class="room" href="radio/">
+      <span class="icon">📻</span>
+      <h2>ラジオ室</h2>
+      <p>建築・設計・施工のニュースを毎朝お届け。建築ラジオは 6:20 から。</p>
+    </a>
+    <a class="room" href="study/">
+      <span class="icon">🇩🇪</span>
+      <h2>学習室</h2>
+      <p>今日のドイツ語フレーズとクイズ。1日10分、リリンちゃんと一緒に。</p>
+    </a>
+    <a class="room" href="works/">
+      <span class="icon">🏠</span>
+      <h2>作品室</h2>
+      <p>Lqkoa の設計課題を展示する部屋。最初の作品は「小さな家」。</p>
+    </a>
+    <a class="room" href="https://quu-maker.github.io/myradio/" target="_blank" rel="noopener">
+      <span class="icon">🎧</span>
+      <h2>ものラジオ（本局）</h2>
+      <p>金融・ゲーム・スポーツ・主要ニュースの朝のラジオはこちら。</p>
+    </a>
+  </nav>
+</div>
+<footer>
+  音声：COEIROINK:リリンちゃん／CV:リリンちゃん@COEIROINK（https://coeiroink.com/character/audio-character/lilin-h）<br>
+  キャラクターは AI で生成した画像です。
+</footer>
+<script src="assets/character.js"></script>
+<script>
+const LINES = {
+  morning: ["おはようございます！ 今日もいい一日にしましょう。", "おはようございます。朝の建築ラジオ、もうすぐ始まりますよ。"],
+  day: ["こんにちは！ どの部屋からのぞいてみますか？", "こんにちは。休憩がてら、学習室でクイズでもどうですか？"],
+  evening: ["こんばんは！ 今日もおつかれさまでした。", "こんばんは。作品室の「小さな家」、見ていってくださいね。"],
+  night: ["こんな時間までおつかれさまです。無理しないでくださいね。", "夜更かしですね。わたしも、もう少しだけ起きてます。"]
+};
+function slot() {
+  const h = new Date().getHours();
+  return h >= 5 && h < 11 ? "morning" : h < 17 ? "day" : h < 23 ? "evening" : "night";
+}
+(async () => {
+  const stage = await createLilinStage(document.getElementById("stage"), "character/");
+  const bubble = document.getElementById("bubble");
+  const say = (text, ms) => { bubble.textContent = text; stage.talk(ms || Math.min(3600, 700 + text.length * 90)); };
+  say(LINES[slot()][0]);
+  document.getElementById("stage").addEventListener("click", () => {
+    const pool = LINES[slot()];
+    say(pool[Math.floor(Math.random() * pool.length)]);
+    stage.smile(1200);
+  });
+})();
+</script>
+</body>
+</html>
