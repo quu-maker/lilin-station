@@ -633,13 +633,31 @@
   };
   let lastInteract = Date.now();
   chooser.addEventListener("pointerdown", () => { lastInteract = Date.now(); });
+  // 声が再生されたら、その長さだけ口パクする
+  document.addEventListener("lilin-voice", e => {
+    if (e.detail && e.detail.ms) talk(e.detail.ms);
+  });
   function react(spot) {
     const lines = REACTIONS[spot];
     if (!lines) return;
     lastInteract = Date.now();
+    const idx = Math.floor(Math.random() * lines.length);
     const bubble = document.getElementById("bubbleText");
-    if (bubble) bubble.textContent = lines[Math.floor(Math.random() * lines.length)];
+    if (bubble) bubble.textContent = lines[idx];
+    if (window.LilinVoice) LilinVoice.play(spot + idx);
     talk(1900); smile(1100);
+  }
+  // リリンちゃん本人をクリックしたときのセリフ
+  const TAP_LINES = [
+    "呼んでくれましたね！ 今日はどの部屋に行きますか？",
+    "わたしはいつもここでお迎えしてます。",
+    "ボイラー室、今日も温かいですよ。",
+  ];
+  function tapLilin() {
+    const idx = Math.floor(Math.random() * TAP_LINES.length);
+    const bubble = document.getElementById("bubbleText");
+    if (bubble) bubble.textContent = TAP_LINES[idx];
+    if (window.LilinVoice) LilinVoice.play("tap" + idx);
   }
   // 放置してるとたまにひとこと（ドイツ語まじり）
   const CHATTER = [
@@ -654,8 +672,10 @@
     if (chooser.classList.contains("hide") || !chooser.classList.contains("has-3d")) return;
     if (Date.now() - lastInteract < 45000) return;
     lastInteract = Date.now();
+    const idx = Math.floor(Math.random() * CHATTER.length);
     const bubble = document.getElementById("bubbleText");
-    if (bubble) bubble.textContent = CHATTER[Math.floor(Math.random() * CHATTER.length)];
+    if (bubble) bubble.textContent = CHATTER[idx];
+    if (window.LilinVoice) LilinVoice.play("chatter" + idx);
     talk(2000);
   }, 20000);
   function pick(ev) {
@@ -686,7 +706,7 @@
     const spot = pick(ev);
     if (spot === "radio") location.href = "radio/";
     else if (spot === "study") location.href = "study/";
-    else if (spot === "lilin") { smile(1300); bounce(); talk(1800); lastInteract = Date.now(); }
+    else if (spot === "lilin") { smile(1300); bounce(); talk(1800); tapLilin(); lastInteract = Date.now(); }
     else if (spot) react(spot);
   });
 

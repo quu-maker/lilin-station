@@ -109,7 +109,8 @@
 <div id="tip"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="assets/character.js"></script>
-<script src="assets/room3d.js?v=6"></script>
+<script src="assets/room3d.js?v=7"></script>
+<script src="assets/voice.js?v=1"></script>
 <script>
 fetch("study/phrases.json").then(r => r.json()).then(ps => {
   const d = new Date();
@@ -132,13 +133,27 @@ function slot() {
 (async () => {
   const stage = await createLilinStage(document.getElementById("stage"), "character/");
   const bubble = document.getElementById("bubble");
-  const say = (text, ms) => { bubble.textContent = text; stage.talk(ms || Math.min(3600, 700 + text.length * 90)); };
-  say(LINES[slot()][0]);
+  const say = (text, key, ms) => {
+    bubble.textContent = text;
+    stage.talk(ms || Math.min(3600, 700 + text.length * 90));
+    if (key && window.LilinVoice) LilinVoice.play(key);
+  };
+  say(LINES[slot()][0], slot() + "0");
   document.getElementById("stage").addEventListener("click", () => {
     const pool = LINES[slot()];
-    say(pool[Math.floor(Math.random() * pool.length)]);
+    const i = Math.floor(Math.random() * pool.length);
+    say(pool[i], slot() + i);
     stage.smile(1200);
     stage.bounce();
+  });
+  // 声の長さに合わせて口パクを合わせ直す
+  document.addEventListener("lilin-voice", e => {
+    try {
+      const k = e.detail && e.detail.key;
+      if (!k) return;
+      if (k === "greet") choiceStage.talk(e.detail.ms);
+      else if (/^(morning|day|evening|night)[01]$/.test(k)) stage.talk(e.detail.ms);
+    } catch {}
   });
   // 入口の選択画面（ドイツ語かラジオか）
   const chooser = document.getElementById("chooser");
@@ -147,9 +162,11 @@ function slot() {
   const greet = "おかえりなさい！ 今日はどっちにしますか？";
   bubbleText.textContent = greet;
   choiceStage.talk(Math.min(3600, 700 + greet.length * 90));
+  if (window.LilinVoice) LilinVoice.greet();
   document.getElementById("stageChoice").addEventListener("click", () => {
     choiceStage.smile(1200);
     choiceStage.bounce();
+    if (window.LilinVoice) LilinVoice.play("greet");
   });
   document.getElementById("wanderBtn").addEventListener("click", () => {
     chooser.classList.add("hide");
