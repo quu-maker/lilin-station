@@ -40,6 +40,19 @@
   font-size:13.5px;text-decoration:underline;cursor:pointer;text-shadow:0 1px 6px #000}
 #menuWord{position:relative;z-index:2;margin-top:11px;color:#ffd76a;font-size:13.5px;text-shadow:0 1px 6px #000}
 #room3d{position:absolute;inset:0;z-index:0}
+#room3d.as-bg{position:fixed;z-index:0}
+/* ハブでも部屋を背景にしたまま選択できるようにする（room-mode） */
+#hubBg{display:none}
+body.room-mode.no3d #hubBg{display:block;position:fixed;inset:0;z-index:0;
+  background:url("assets/room-menu.webp") center/cover no-repeat}
+body.room-mode.no3d #hubBg::after{content:"";position:absolute;inset:0;background:rgba(5,8,12,.45)}
+body.room-mode header.top,body.room-mode .wrap,body.room-mode footer{position:relative;z-index:2}
+body.room-mode .stagebox{display:none}
+body.room-mode .wrap{pointer-events:none}
+body.room-mode .wrap a,body.room-mode .wrap button,body.room-mode .bubble{pointer-events:auto}
+body.room-mode .bubble,body.room-mode .room,body.room-mode #today{
+  background:rgba(22,26,38,.85);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+body.room-mode header.top h1,body.room-mode header.top p{text-shadow:0 2px 10px #000}
 #room3d canvas{display:block}
 #chooser.has-3d .room-bg,#chooser.has-3d .shade,#chooser.has-3d .mote,#chooser.has-3d #stageChoice{display:none}
 /* 今日の放送ダイジェスト（ハブに最新回の内容を表示する） */
@@ -56,6 +69,7 @@
 </style>
 </head>
 <body>
+<div id="hubBg"></div>
 <div id="chooser">
   <div class="room-bg"></div>
   <div class="shade"></div>
@@ -124,7 +138,7 @@
 <div id="tip"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="assets/character.js"></script>
-<script src="assets/room3d.js?v=7"></script>
+<script src="assets/room3d.js?v=8"></script>
 <script src="assets/voice.js?v=1"></script>
 <script>
 fetch("study/phrases.json").then(r => r.json()).then(ps => {
@@ -221,7 +235,18 @@ function slot() {
     if (window.LilinVoice) LilinVoice.play("greet");
   });
   document.getElementById("wanderBtn").addEventListener("click", () => {
+    // ハブに移っても部屋は背景として残す（3Dが生きていればキャンバスごと引っ越し）
+    const r3 = document.getElementById("room3d");
+    if (chooser.classList.contains("has-3d") && r3) {
+      r3.classList.add("as-bg");
+      document.body.appendChild(r3);
+      document.body.classList.add("room-mode");
+      window.dispatchEvent(new Event("resize"));
+    } else {
+      document.body.classList.add("room-mode", "no3d");
+    }
     chooser.classList.add("hide");
+    window.scrollTo(0, 0);
   });
 })();
 </script>

@@ -8,7 +8,16 @@
   mount.id = "room3d";
   chooser.insertBefore(mount, chooser.firstChild);
 
-  const W = () => chooser.clientWidth, H = () => chooser.clientHeight;
+  const W = () => mount.clientWidth || window.innerWidth, H = () => mount.clientHeight || window.innerHeight;
+  // セリフ表示：入口のダイアログに出し、ハブ表示中（room-mode）はハブの吹き出しにも出す
+  const setBubble = text => {
+    const b = document.getElementById("bubbleText");
+    if (b) b.textContent = text;
+    if (document.body.classList.contains("room-mode")) {
+      const hb = document.getElementById("bubble");
+      if (hb) hb.textContent = text;
+    }
+  };
   const renderer = new THREE.WebGLRenderer({ antialias: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   renderer.setSize(W(), H());
@@ -642,8 +651,7 @@
     if (!lines) return;
     lastInteract = Date.now();
     const idx = Math.floor(Math.random() * lines.length);
-    const bubble = document.getElementById("bubbleText");
-    if (bubble) bubble.textContent = lines[idx];
+    setBubble(lines[idx]);
     if (window.LilinVoice) LilinVoice.play(spot + idx);
     talk(1900); smile(1100);
   }
@@ -655,8 +663,7 @@
   ];
   function tapLilin() {
     const idx = Math.floor(Math.random() * TAP_LINES.length);
-    const bubble = document.getElementById("bubbleText");
-    if (bubble) bubble.textContent = TAP_LINES[idx];
+    setBubble(TAP_LINES[idx]);
     if (window.LilinVoice) LilinVoice.play("tap" + idx);
   }
   // 放置してるとたまにひとこと（ドイツ語まじり）
@@ -669,12 +676,12 @@
     "ボイラーの調子、いい感じです。",
   ];
   setInterval(() => {
-    if (chooser.classList.contains("hide") || !chooser.classList.contains("has-3d")) return;
+    if (!chooser.classList.contains("has-3d")) return;
+    if (chooser.classList.contains("hide") && !document.body.classList.contains("room-mode")) return;
     if (Date.now() - lastInteract < 45000) return;
     lastInteract = Date.now();
     const idx = Math.floor(Math.random() * CHATTER.length);
-    const bubble = document.getElementById("bubbleText");
-    if (bubble) bubble.textContent = CHATTER[idx];
+    setBubble(CHATTER[idx]);
     if (window.LilinVoice) LilinVoice.play("chatter" + idx);
     talk(2000);
   }, 20000);
@@ -712,7 +719,7 @@
 
   // ---------- カメラの揺れとマウスパララックス ----------
   let mx = 0, my = 0, tx = 0, ty = 0;
-  chooser.addEventListener("pointermove", ev => {
+  window.addEventListener("pointermove", ev => {
     tx = (ev.clientX / window.innerWidth - 0.5) * 2;
     ty = (ev.clientY / window.innerHeight - 0.5) * 2;
   });
@@ -726,7 +733,7 @@
   const clock = new THREE.Clock();
   function animate() {
     requestAnimationFrame(animate);
-    if (chooser.classList.contains("hide")) return;
+    if (chooser.classList.contains("hide") && !document.body.classList.contains("room-mode")) return;
     const t = clock.getElapsedTime();
     const now = performance.now();
     mx += (tx - mx) * 0.03; my += (ty - my) * 0.03;
