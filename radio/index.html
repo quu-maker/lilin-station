@@ -316,11 +316,17 @@ html.embed body{background:var(--ink)}
 html.embed main{max-width:none;padding:0;height:100vh;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
 html.embed #frame{width:min(100%, calc((100vh - 64px) * 16 / 9));margin:0 auto;border-radius:0}
 html.embed .controls{width:min(100%, calc((100vh - 64px) * 16 / 9));margin:6px auto 4px;padding:0 10px;box-sizing:border-box}
-html.embed :is(#now,#links,#scriptBox,#talkBox,#pastH,#eps,footer){display:none !important}
+html.embed :is(#now,#links,#mapBox,#scriptBox,#talkBox,#pastH,#eps,footer){display:none !important}
 html.embed #sname{cursor:pointer}
 html.embed #sname:hover{text-decoration:underline}
 #now{display:none;font-size:18px;font-weight:700;line-height:1.5;min-height:3em;margin:6px 2px}
 h1{font-size:15px;margin:22px 0 8px;color:var(--muted);font-weight:600}
+/* news map: pins for the places named in the episode's stories (Leaflet + OpenStreetMap) */
+#newsmap{height:380px;border-radius:14px;border:1px solid var(--line);background:#0f1219;z-index:0}
+html.phone #newsmap{height:300px}
+#mapBox .mapNote{font-size:12px;color:var(--muted);margin:8px 2px 0;line-height:1.6}
+#mapBox .mapPop b{display:block;font-size:13px;margin-bottom:4px;color:#111}
+#mapBox .mapPop button{display:block;width:100%;background:none;border:0;color:#1565c0;cursor:pointer;font:13px var(--jp);text-align:left;padding:3px 0;text-decoration:underline}
 .eps a{display:flex;gap:12px;align-items:baseline;padding:8px 10px;border-radius:10px;color:inherit;text-decoration:none}
 .eps a:hover{background:#12151d}.eps a.cur{background:#1a1d27}
 .eps .d{font-size:13px;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -491,12 +497,15 @@ html.phone #share span{display:none}
   <div id="now"></div>
   <details id="talkBox" hidden><summary id="talkSum">コメント</summary><p class="talkNote" id="talkNote"></p><div id="talk"></div></details>
   <div class="links" id="links"></div>
+  <div id="mapBox" hidden><h1>ニュースマップ</h1><div id="newsmap"></div><p class="mapNote">記事の見出しや本文に出てきた地名にピンを立てています（地名が見つかった記事だけ）。ピンを押すと、その記事へジャンプできます。地図：© OpenStreetMap contributors</p></div>
   <details id="scriptBox"><summary id="scriptSum">台本を読む</summary><div class="source" id="scriptText"></div></details>
   <h1 id="pastH">これまでの放送</h1>
   <div class="eps" id="eps"></div>
   <footer><span id="credits"></span> ／ <a href="https://github.com/monoradio102/myradio">myradio</a></footer>
 </main>
 <audio id="audio" preload="auto"></audio>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const $ = id => document.getElementById(id);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -1081,6 +1090,7 @@ async function load(date, lang = LANG, at = 0) {
   setTopicMode(null);
   $("toc").innerHTML = ep.news.map((n, j) =>
     `<button data-seg="${newsSeg(j)}">${String(j + 1).padStart(2, "0")}<span>${esc(n.label)}</span></button>`).join("");
+  try { renderNewsMap(); } catch { $("mapBox").hidden = true; }
   document.querySelectorAll("#eps a").forEach(a => a.classList.toggle("cur", a.dataset.date === date));
   $("loading").textContent = "";
   // switching the language keeps the place in the show: the same part, from its start
@@ -1104,6 +1114,72 @@ async function load(date, lang = LANG, at = 0) {
   SHARE = new URL(`share/${name}.html`, location.href).href;
   $("share").hidden = true;
   fetch(SHARE, { method: "HEAD", cache: "no-store" }).then(r => { if (r.ok && SHARE.includes(name)) $("share").hidden = false; }).catch(() => {});
+}
+// ---------- news map: a pin for each place named in this episode's stories ----------
+// [name, lat, lng]; matching tries the longest names first, and the generic country entries
+// sit behind their cities, so "ベルリンの美術館" lands on Berlin, not on Germany as a whole.
+const PLACES = [
+  ["北海道", 43.06, 141.35], ["札幌", 43.06, 141.35], ["青森", 40.82, 140.74], ["岩手", 39.70, 141.15], ["盛岡", 39.70, 141.15],
+  ["宮城", 38.27, 140.87], ["仙台", 38.27, 140.87], ["秋田", 39.72, 140.10], ["山形", 38.24, 140.36], ["福島", 37.75, 140.47],
+  ["茨城", 36.34, 140.45], ["水戸", 36.36, 140.45], ["栃木", 36.57, 139.88], ["宇都宮", 36.56, 139.88], ["群馬", 36.39, 139.06], ["前橋", 36.39, 139.06],
+  ["埼玉", 35.86, 139.65], ["さいたま", 35.86, 139.65], ["川口", 35.81, 139.72], ["千葉", 35.61, 140.12], ["船橋", 35.69, 139.98],
+  ["東京都", 35.68, 139.69], ["東京", 35.68, 139.69], ["新宿", 35.69, 139.70], ["渋谷", 35.66, 139.70], ["横浜", 35.44, 139.64], ["川崎", 35.53, 139.70], ["相模原", 35.57, 139.37], ["神奈川", 35.45, 139.60],
+  ["新潟", 37.92, 139.06], ["富山", 36.70, 137.21], ["石川", 36.59, 136.63], ["金沢", 36.56, 136.66], ["福井", 36.06, 136.22],
+  ["山梨", 35.66, 138.57], ["甲府", 35.66, 138.57], ["長野", 36.65, 138.18], ["松本", 36.24, 137.97], ["岐阜", 35.39, 136.72],
+  ["静岡", 34.98, 138.38], ["浜松", 34.71, 137.73], ["愛知", 35.18, 136.91], ["名古屋", 35.18, 136.91], ["豊田", 35.08, 137.16],
+  ["三重", 34.73, 136.51], ["滋賀", 35.00, 135.87], ["大津", 35.02, 135.85], ["京都", 35.01, 135.77], ["大阪", 34.69, 135.50], ["堺", 34.57, 135.48],
+  ["兵庫", 34.69, 135.18], ["神戸", 34.69, 135.20], ["姫路", 34.82, 134.69], ["奈良", 34.69, 135.83], ["和歌山", 34.23, 135.17],
+  ["鳥取", 35.50, 134.24], ["島根", 35.47, 133.05], ["松江", 35.47, 133.05], ["岡山", 34.66, 133.92], ["広島", 34.39, 132.46], ["山口", 34.19, 131.47],
+  ["徳島", 34.07, 134.56], ["香川", 34.34, 134.04], ["高松", 34.34, 134.05], ["愛媛", 33.84, 132.77], ["松山", 33.84, 132.77], ["高知", 33.55, 133.53],
+  ["福岡", 33.59, 130.40], ["北九州", 33.88, 130.87], ["佐賀", 33.26, 130.30], ["長崎", 32.75, 129.87], ["熊本", 32.79, 130.74],
+  ["大分", 33.24, 131.67], ["宮崎", 31.91, 131.42], ["鹿児島", 31.59, 130.56], ["沖縄", 26.21, 127.68], ["那覇", 26.21, 127.68],
+  ["ベルリン", 52.52, 13.40], ["ミュンヘン", 48.14, 11.58], ["ハンブルク", 53.55, 9.99], ["フランクフルト", 50.11, 8.68],
+  ["シュトゥットガルト", 48.78, 9.18], ["デッサウ", 51.84, 12.24], ["ケルン", 50.94, 6.96], ["ドイツ", 51.10, 10.40],
+  ["パリ", 48.86, 2.35], ["ロンシャン", 47.70, 6.78], ["フランス", 46.60, 2.40], ["ロンドン", 51.51, -0.13], ["イギリス", 54.00, -2.50],
+  ["ニューヨーク", 40.71, -74.01], ["シカゴ", 41.88, -87.63], ["ロサンゼルス", 34.05, -118.24], ["アメリカ", 39.80, -98.60],
+  ["ミラノ", 45.46, 9.19], ["ローマ", 41.90, 12.50], ["イタリア", 42.80, 12.80], ["バルセロナ", 41.39, 2.17], ["ビルバオ", 43.26, -2.93], ["スペイン", 40.20, -3.60],
+  ["アムステルダム", 52.37, 4.90], ["オランダ", 52.20, 5.30], ["ウィーン", 48.21, 16.37], ["オーストリア", 47.60, 13.80],
+  ["チューリッヒ", 47.38, 8.54], ["スイス", 46.80, 8.20], ["コペンハーゲン", 55.68, 12.57], ["デンマーク", 56.00, 10.00],
+  ["ヘルシンキ", 60.17, 24.94], ["フィンランド", 63.00, 26.00], ["北京", 39.90, 116.40], ["上海", 31.23, 121.47],
+  ["ソウル", 37.57, 126.98], ["ドバイ", 25.20, 55.27], ["シドニー", -33.87, 151.21], ["オーストラリア", -25.00, 134.00],
+];
+const PLACES_SORTED = [...PLACES].sort((a, b) => b[0].length - a[0].length);
+let newsMap = null, mapLayer = null;
+window.__mapJump = j => {
+  const b = document.querySelectorAll("#links .jump")[j];
+  if (b) { b.click(); window.scrollTo({ top: 0, behavior: "smooth" }); }
+};
+function renderNewsMap() {
+  const box = $("mapBox");
+  if (typeof L === "undefined" || !ep || !Array.isArray(ep.news)) { box.hidden = true; return; }
+  const hits = new Map();
+  ep.news.forEach((n, j) => {
+    const text = `${n.label || ""} ${(n.points || []).join(" ")} ${n.link?.title || ""}`;
+    const p = PLACES_SORTED.find(([name]) => text.includes(name));
+    if (!p) return;
+    if (!hits.has(p[0])) hits.set(p[0], { lat: p[1], lng: p[2], idxs: [] });
+    hits.get(p[0]).idxs.push(j);
+  });
+  if (!hits.size) { box.hidden = true; return; }
+  box.hidden = false;
+  if (!newsMap) {
+    newsMap = L.map("newsmap", { scrollWheelZoom: false });
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 18, attribution: "&copy; OpenStreetMap contributors",
+    }).addTo(newsMap);
+    mapLayer = L.layerGroup().addTo(newsMap);
+  }
+  mapLayer.clearLayers();
+  const bounds = [];
+  hits.forEach((v, name) => {
+    const marker = L.marker([v.lat, v.lng]).addTo(mapLayer);
+    marker.bindPopup(`<div class="mapPop"><b>${esc(name)}</b>${v.idxs.map(j =>
+      `<button onclick="window.__mapJump(${j})">${String(j + 1).padStart(2, "0")} ${esc(ep.news[j].label)}</button>`).join("")}</div>`);
+    bounds.push([v.lat, v.lng]);
+  });
+  if (bounds.length === 1) newsMap.setView(bounds[0], 8);
+  else newsMap.fitBounds(bounds, { padding: [30, 30], maxZoom: 8 });
+  setTimeout(() => newsMap.invalidateSize(), 60);
 }
 // share: a small menu - the phone's share sheet (where there is one), copy the link, copy the code to embed the player
 let SHARE = "";

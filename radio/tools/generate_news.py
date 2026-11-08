@@ -198,6 +198,21 @@ def relevant_title(topic_name: str, title: str) -> bool:
             "NBA", "Bリーグ", "Wリーグ",
         )
         return any(term.casefold() in title.casefold() for term in golf_basketball_terms)
+    if topic_name == "世界の建築":
+        world_terms = (
+            "ドイツ", "ベルリン", "ミュンヘン", "ハンブルク", "シュトゥットガルト", "ケルン", "デッサウ", "フランクフルト",
+            "ヨーロッパ", "欧州", "フランス", "パリ", "イギリス", "ロンドン", "アイルランド", "ダブリン",
+            "アメリカ", "ニューヨーク", "シアトル", "シカゴ", "ロサンゼルス", "ボストン", "カナダ",
+            "イタリア", "ミラノ", "ローマ", "ヴェネツィア", "スペイン", "バルセロナ", "ビルバオ", "マドリード", "ポルトガル", "リスボン",
+            "オランダ", "ロッテルダム", "スイス", "チューリッヒ", "バーゼル", "オーストリア", "ウィーン", "ベルギー",
+            "デンマーク", "コペンハーゲン", "スウェーデン", "ストックホルム", "ノルウェー", "オスロ",
+            "フィンランド", "ヘルシンキ", "ポーランド", "ワルシャワ", "チェコ", "プラハ", "ギリシャ",
+            "中国", "北京", "上海", "韓国", "ソウル", "台湾", "インド", "ベトナム", "タイ", "シンガポール",
+            "ドバイ", "カタール", "トルコ", "エジプト", "ブラジル", "メキシコ",
+            "オーストラリア", "シドニー", "メルボルン", "ニュージーランド",
+            "世界", "海外", "国際",
+        )
+        return any(term in title for term in world_terms)
     return True
 
 
@@ -559,6 +574,12 @@ def explain_importance(topic: str, title: str, summary: str) -> str:
             (r"マンション|分譲|住宅地", "住まいの供給の話です。価格と立地、どんな層に向けた住宅かを見たい話題です。"),
             (r"移住|定住|二地域", "住む人をどう迎えるかという地域の話です。住宅と仕事の受け皿が鍵になります。"),
         ],
+        "世界の建築": [
+            (r"ドイツ|ベルリン|ミュンヘン|ハンブルク", "ドイツの建築の話題です。設計の進め方や制度の違いまで、日本との比較で見ると面白い話題です。"),
+            (r"美術館|博物館|劇場|ホール", "海外の文化施設の話題です。展示や公演の空間そのものが、その街の顔になっています。"),
+            (r"世界遺産|登録|選定", "世界的に価値が認められた建物や街の話です。保存と活用をどう両立させるかが焦点になります。"),
+            (r"住宅|集合住宅|団地", "海外の住まいの話です。気候や暮らし方が違うと、間取りの当たり前も変わります。"),
+        ],
         "建築文化": [
             (r"展覧会|企画展|特別展|写真展|会期", "展覧会の話です。会期と会場を押さえて、行けるかどうかも含めて楽しみたい話題です。"),
             (r"世界遺産|文化財|登録|選定", "価値が公に認められたという話です。保存と公開の両立が今後の焦点になります。"),
@@ -689,6 +710,70 @@ def fortune_lines(corners: dict, rng: random.Random) -> list[dict]:
     return [script_line(text) for text in lines]
 
 
+def _daily_pick(items: list, episode_date: date, offset: int = 0):
+    """日替わりで1件選ぶ。日付で決まるので、同じ日は必ず同じ結果になる。"""
+    if not items:
+        return None
+    return items[(episode_date.toordinal() + offset) % len(items)]
+
+
+def personal_chatter_lines(corners: dict, episode_date: date) -> list[dict]:
+    """リリンちゃんの個人的な雑談。ニュースと切り離した、彼女自身の話をするコーナー。"""
+    pool = [text for text in (corners.get("personal_chatter") or []) if isinstance(text, str) and text]
+    text = _daily_pick(pool, episode_date, offset=3)
+    if not text:
+        return []
+    return [
+        script_line("ここで、リリンちゃんのひとりごとコーナーです。"),
+        script_line(text),
+    ]
+
+
+def famous_building_lines(corners: dict, episode_date: date) -> list[dict]:
+    """名建築を日替わりで1件だけ紹介する「名建築30秒」。"""
+    pool = [
+        item for item in (corners.get("famous_buildings") or [])
+        if isinstance(item, dict) and item.get("name") and item.get("explain")
+    ]
+    item = _daily_pick(pool, episode_date, offset=7)
+    if not item:
+        return []
+    return [
+        script_line(f"名建築30秒のコーナーです。今日は「{item['name']}」。"),
+        script_line(str(item["explain"])),
+    ]
+
+
+def arch_word_lines(corners: dict, episode_date: date) -> list[dict]:
+    """設計の用語を日替わりで1つ解説するワードコーナー。"""
+    pool = [
+        item for item in (corners.get("arch_words") or [])
+        if isinstance(item, dict) and item.get("term") and item.get("explain")
+    ]
+    item = _daily_pick(pool, episode_date, offset=11)
+    if not item:
+        return []
+    return [
+        script_line(f"今日の建築キーワードは「{item['term']}」です。"),
+        script_line(str(item["explain"])),
+    ]
+
+
+def site_word_lines(corners: dict, episode_date: date) -> list[dict]:
+    """施工・現場の用語を日替わりで1つ解説するワードコーナー。"""
+    pool = [
+        item for item in (corners.get("site_words") or [])
+        if isinstance(item, dict) and item.get("term") and item.get("explain")
+    ]
+    item = _daily_pick(pool, episode_date, offset=17)
+    if not item:
+        return []
+    return [
+        script_line(f"現場ワードのコーナーです。今日の言葉は「{item['term']}」。"),
+        script_line(str(item["explain"])),
+    ]
+
+
 def generate_script(preferences: dict, stories: list[dict], episode_date: date) -> dict:
     station = read_json(ROOT / "station.json")
     max_stories = int(preferences.get("max_stories", 15))
@@ -698,12 +783,26 @@ def generate_script(preferences: dict, stories: list[dict], episode_date: date) 
         if story["topic"] in by_topic:
             by_topic[story["topic"]].append(story)
 
+    # ジャンルごとの1回あたり上限（max_per_episode）。「世界の建築」のような
+    # 1本だけ入れたいジャンルのためにある。未指定なら全体の上限まで入る。
+    topic_caps: dict[str, int] = {}
+    for topic in preferences["topics"]:
+        try:
+            topic_caps[topic["name"]] = int(topic.get("max_per_episode", max_stories))
+        except (TypeError, ValueError):
+            topic_caps[topic["name"]] = max_stories
+    topic_counts = {name: 0 for name in topic_names}
     selected: list[dict] = []
     while len(selected) < max_stories:
         added = False
         for topic_name in topic_names:
-            if by_topic[topic_name] and len(selected) < max_stories:
+            if (
+                by_topic[topic_name]
+                and len(selected) < max_stories
+                and topic_counts[topic_name] < topic_caps.get(topic_name, max_stories)
+            ):
                 selected.append(by_topic[topic_name].pop(0))
+                topic_counts[topic_name] += 1
                 added = True
         if not added:
             break
@@ -756,8 +855,13 @@ def generate_script(preferences: dict, stories: list[dict], episode_date: date) 
     ]
     opening.extend(freetalk_lines(corners, episode_date, rng))
 
-    # 締めは「クイズ出題 → 運勢（考える時間）→ 答え合わせ → 挨拶」の順に組む
+    # 締めは「個人雑談 → 名建築30秒 → 建築キーワード → 現場ワード →
+    # クイズ出題 → 運勢（考える時間）→ 答え合わせ → 挨拶」の順に組む
     closing: list[dict] = []
+    closing.extend(personal_chatter_lines(corners, episode_date))
+    closing.extend(famous_building_lines(corners, episode_date))
+    closing.extend(arch_word_lines(corners, episode_date))
+    closing.extend(site_word_lines(corners, episode_date))
     quiz = build_quiz(quiz_sources)
     if quiz:
         closing.extend(quiz[0])
