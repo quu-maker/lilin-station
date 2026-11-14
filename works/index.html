@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>作品室｜リリン・ステーション</title>
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="top">
+  <h1>作品室</h1>
+  <p>Lqkoa の設計課題を、リリンちゃんが案内します</p>
+  <a class="backlink" href="../">← ステーションに戻る</a>
+</header>
+<div class="wrap">
+  <div class="stagebox" id="stage" style="max-width:300px"></div>
+  <div class="bubble" id="bubble" style="max-width:420px">……</div>
+  <div id="works"></div>
+</div>
+<footer>
+  音声：COEIROINK:リリンちゃん／CV:リリンちゃん@COEIROINK<br>
+  作品は課題が増えるたびに、この部屋に増えていきます。
+</footer>
+<dialog id="lightbox"><img id="lightbox-img" alt=""></dialog>
+<script src="../assets/character.js"></script>
+<script>
+(async () => {
+  const works = await (await fetch("works.json")).json();
+  const stage = await createLilinStage(document.getElementById("stage"), "../character/");
+  const bubble = document.getElementById("bubble");
+  const say = (t) => { bubble.textContent = t; stage.talk(Math.min(3600, 600 + t.length * 80)); };
+  say("作品室へようこそ。いま展示しているのは、最初の作品です。");
+
+  const root = document.getElementById("works");
+  const dialog = document.getElementById("lightbox");
+  const dialogImg = document.getElementById("lightbox-img");
+  dialog.addEventListener("click", () => dialog.close());
+
+  for (const w of works) {
+    const card = document.createElement("section");
+    card.className = "card";
+    const h = document.createElement("h2"); h.textContent = w.title;
+    const meta = document.createElement("p"); meta.className = "meaning"; meta.textContent = w.meta;
+    const desc = document.createElement("p"); desc.textContent = w.description;
+    card.append(h, meta, desc);
+    if (w.decisions && w.decisions.length) {
+      const ul = document.createElement("ul");
+      for (const d of w.decisions) { const li = document.createElement("li"); li.textContent = "設計の判断：" + d; ul.appendChild(li); }
+      card.appendChild(ul);
+    }
+    const gal = document.createElement("div"); gal.className = "gallery";
+    for (const im of w.images) {
+      const fig = document.createElement("figure");
+      const img = document.createElement("img"); img.src = im.src; img.alt = im.caption; img.loading = "lazy";
+      img.addEventListener("click", () => { dialogImg.src = im.src; dialog.showModal(); });
+      const cap = document.createElement("figcaption"); cap.textContent = im.caption;
+      fig.append(img, cap);
+      gal.appendChild(fig);
+    }
+    card.appendChild(gal);
+    const btn = document.createElement("button");
+    btn.className = "btn sub"; btn.textContent = "リリンちゃんの案内を聞く";
+    btn.style.marginTop = "12px";
+    btn.addEventListener("click", () => {
+      const line = (w.guide_lines || ["この作品です。"])[Math.floor(Math.random() * (w.guide_lines || [""]).length)];
+      say(line); stage.smile(1400);
+    });
+    card.appendChild(btn);
+    root.appendChild(card);
+  }
+})();
+</script>
+</body>
+</html>
