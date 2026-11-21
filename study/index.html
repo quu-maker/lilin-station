@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>学習室｜リリン・ステーション</title>
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+<header class="top">
+  <h1>学習室</h1>
+  <p>今日のドイツ語フレーズとクイズ（1日10分）</p>
+  <a class="backlink" href="../">← ステーションに戻る</a>
+</header>
+<div class="wrap">
+  <div class="stagebox" id="stage" style="max-width:300px"></div>
+  <div class="bubble" id="bubble" style="max-width:420px">……</div>
+
+  <section class="card" id="phrase-card">
+    <h2>今日のフレーズ</h2>
+    <p class="big-de" id="p-de">…</p>
+    <p class="reading" id="p-reading"></p>
+    <p class="meaning" id="p-ja"></p>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <section class="card">
+    <h2>クイズ：このフレーズの意味は？</h2>
+    <div class="choices" id="choices"></div>
+    <p id="result" style="min-height:1.6em"></p>
+  </section>
+
+  <section class="card">
+    <h2>ランダムクイズ（全フレーズから5問）</h2>
+    <p class="big-de" id="rq-de">「スタート」で始まります</p>
+    <p class="reading" id="rq-reading"></p>
+    <div class="choices" id="rq-choices"></div>
+    <p id="rq-result" style="min-height:1.6em"></p>
+    <div class="choices"><button id="rq-start">スタート</button></div>
+  </section>
+
+  <section class="card">
+    <h2>フレーズ一覧</h2>
+    <p id="learned-count" style="color:var(--muted)"></p>
+    <div id="list"></div>
+  </section>
+</div>
+<footer>
+  音声：COEIROINK:リリンちゃん／CV:リリンちゃん@COEIROINK<br>
+  学習室の進捗はこのブラウザに保存されます。
+</footer>
+<script src="../assets/character.js"></script>
+<script>
+const KEY = "lilin-study-v1";
+function loadStats() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch { return {}; } }
+function saveStats(s) { localStorage.setItem(KEY, JSON.stringify(s)); }
+function todayStr() { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0"); }
+function ordinal() { const d = new Date(); return Math.floor((d - new Date(d.getFullYear(),0,0)) / 86400000); }
+
+(async () => {
+  const phrases = await (await fetch("phrases.json")).json();
+  const stage = await createLilinStage(document.getElementById("stage"), "../character/");
+  const bubble = document.getElementById("bubble");
+  const say = (t) => { bubble.textContent = t; stage.talk(Math.min(3200, 600 + t.length * 80)); };
+
+  const idx = ordinal() % phrases.length;
+  const today = phrases[idx];
+  document.getElementById("p-de").textContent = today.de;
+  document.getElementById("p-reading").textContent = today.reading;
+  document.getElementById("p-ja").textContent = today.ja;
+
+  const statsEl = document.getElementById("stats");
+  function renderStats() {
+    const s = loadStats();
+    statsEl.innerHTML = "";
+    const a = document.createElement("span"); a.textContent = "連続日数: " + (s.streak || 0) + "日";
+    const b = document.createElement("span"); b.textContent = "クイズ正解: " + (s.correct || 0) + "回";
+    const c = document.createElement("span"); c.textContent = "挑戦: " + (s.attempts || 0) + "回";
+    statsEl.append(a, b, c);
+  }
+  renderStats();
+  say("今日のフレーズは「" + today.de + "」。意味を当ててみてくださいね。");
+
+  // deterministic 4 choices: today + 3 others
+  const others = phrases.map((p, i) => i).filter(i => i !== idx);
+  const picks = [idx];
+  for (let k = 0; picks.length < 4; k++) picks.push(others[(idx * 7 + k * 3) % others.length]);
+  const shuffled = picks.map((v, i) => [((idx + i * 5) % 4), v]).sort((a, b) => a[0] - b[0]).map(x => x[1]);
+  const choicesEl = document.getElementById("choices");
+  const resultEl = document.getElementById("result");
+  let done = false;
+  for (const ci of shuffled) {
+    const btn = document.createElement("button");
+    btn.textContent = phrases[ci].ja;
+    btn.addEventListener("click", () => {
+      if (done) return;
+      const s = loadStats();
+      s.attempts = (s.attempts || 0) + 1;
+      if (ci === idx) {
+        done = true;
+        btn.classList.add("right");
+        s.correct = (s.correct || 0) + 1;
+        const t = todayStr();
+        if (s.lastCorrectDay !== t) {
+          const y = new Date(); y.setDate(y.getDate() - 1);
+          const yStr = y.getFullYear() + "-" + String(y.getMonth()+1).padStart(2,"0") + "-" + String(y.getDate()).padStart(2,"0");
+          s.streak = s.lastCorrectDay === yStr ? (s.streak || 0) + 1 : 1;
+          s.lastCorrectDay = t;
+        }
+        saveStats(s);
+        resultEl.textContent = "正解！ 「" + today.de + "」は「" + today.ja + "」です。";
+        say("正解です！ その調子ですよ。");
+        stage.smile(2000);
+      } else {
+        btn.classList.add("wrong");
+        btn.disabled = true;
+        resultEl.textContent = "惜しい、もう一度考えてみてください。";
+        say("惜しいです。ヒントは読み方にありますよ。");
+        saveStats(s);
+      }
+      renderStats();
+    });
+    choicesEl.appendChild(btn);
+  }
+
+  // ---- ランダムクイズ（5問） ----
+  const rqDe = document.getElementById("rq-de");
+  const rqReading = document.getElementById("rq-reading");
+  const rqChoices = document.getElementById("rq-choices");
+  const rqResult = document.getElementById("rq-result");
+  const rqStart = document.getElementById("rq-start");
+  let rq = null;
+  function rqAsk() {
+    const p = phrases[rq.order[rq.pos]];
+    rqDe.textContent = p.de;
+    rqReading.textContent = p.reading;
+    rqResult.textContent = "第" + (rq.pos + 1) + "問 ／ 5問中 " + rq.score + " 問正解";
+    rqChoices.innerHTML = "";
+    const opts = [rq.order[rq.pos]];
+    while (opts.length < 4) {
+      const r = Math.floor(Math.random() * phrases.length);
+      if (!opts.includes(r)) opts.push(r);
+    }
+    opts.sort(() => Math.random() - 0.5);
+    let locked = false;
+    for (const oi of opts) {
+      const btn = document.createElement("button");
+      btn.textContent = phrases[oi].ja;
+      btn.addEventListener("click", () => {
+        if (locked) return;
+        locked = true;
+        const s = loadStats();
+        s.attempts = (s.attempts || 0) + 1;
+        if (oi === rq.order[rq.pos]) {
+          btn.classList.add("right");
+          rq.score++;
+          s.correct = (s.correct || 0) + 1;
+          rqResult.textContent = "正解！";
+        } else {
+          btn.classList.add("wrong");
+          rqResult.textContent = "正解は「" + p.ja + "」でした。";
+        }
+        saveStats(s);
+        renderStats();
+        rq.pos++;
+        setTimeout(() => {
+          if (rq.pos < rq.order.length) rqAsk();
+          else {
+            rqDe.textContent = "おつかれさまでした";
+            rqReading.textContent = "";
+            rqChoices.innerHTML = "";
+            rqResult.textContent = "結果：5問中 " + rq.score + " 問正解！";
+            say(rq.score >= 4 ? "すごいです！ ほぼ完璧ですね。" : "おつかれさまです。復習してもう一度どうぞ。");
+            if (rq.score >= 4) stage.smile(2000);
+            rqStart.textContent = "もう一度";
+            rq = null;
+          }
+        }, 1100);
+      });
+      rqChoices.appendChild(btn);
+    }
+  }
+  rqStart.addEventListener("click", () => {
+    const order = phrases.map((_, i) => i).sort(() => Math.random() - 0.5).slice(0, 5);
+    rq = { order, pos: 0, score: 0 };
+    rqStart.textContent = "挑戦中…";
+    say("ランダムクイズです。全フレーズから5問出しますね。");
+    rqAsk();
+  });
+
+  // ---- フレーズ一覧＋「覚えた」チェック ----
+  const learnedCount = document.getElementById("learned-count");
+  const learned = new Set(loadStats().learned || []);
+  function renderLearned() {
+    learnedCount.textContent = "覚えた: " + learned.size + " / " + phrases.length;
+  }
+  renderLearned();
+  const list = document.getElementById("list");
+  for (const p of phrases) {
+    const row = document.createElement("p");
+    row.innerHTML = "";
+    const b = document.createElement("strong"); b.textContent = p.de;
+    const span = document.createElement("span"); span.style.color = "var(--muted)";
+    span.textContent = "　" + p.reading + "　―　" + p.ja;
+    const btn = document.createElement("button");
+    btn.style.cssText = "margin-left:10px;font-size:12.5px;padding:2px 10px;border-radius:999px;cursor:pointer";
+    const paint = () => { btn.textContent = learned.has(p.de) ? "✓ 覚えた" : "覚えた"; };
+    paint();
+    btn.addEventListener("click", () => {
+      if (learned.has(p.de)) learned.delete(p.de); else learned.add(p.de);
+      const s = loadStats();
+      s.learned = [...learned];
+      saveStats(s);
+      paint();
+      renderLearned();
+    });
+    row.append(b, span, btn);
+    list.appendChild(row);
+  }
+})();
+</script>
+</body>
+</html>
